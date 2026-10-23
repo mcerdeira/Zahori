@@ -63,6 +63,7 @@ target_scene = "uid://bnc70417e4goo"
 
 [node name="Door2" parent="." unique_id=993677731 instance=ExtResource("6_w1c7e")]
 position = Vector2(528, 102)
+target_scene = "uid://osmuu1eucw62"
 
 [node name="Water" parent="." unique_id=719636805 instance=ExtResource("8_pum76")]
 position = Vector2(48, 163)

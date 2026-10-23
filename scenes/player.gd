@@ -18,9 +18,11 @@ enum State { NORMAL, BUILDING, VANISHING, DOOR }
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var state := State.NORMAL
 var blocks: Array[Node] = []
+var _vanishing: Array[Node] = [] # bloques en pleno fade (todavía sólidos)
 var _timer := 0.0
 var _door_x := 0.0
 var _respawn_position := Vector2.ZERO
+var _doors_touching := 0 # puertas superpuestas ahora (para la silueta)
 
 @onready var sprite: AnimatedSprite2D = $sprite
 @onready var collider: CollisionShape2D = $collider
@@ -51,6 +53,7 @@ func die() -> void:
 		if is_instance_valid(block):
 			block.queue_free()
 	blocks.clear()
+	_vanishing.clear()
 	state = State.NORMAL
 	velocity = Vector2.ZERO
 	global_position = _respawn_position
@@ -62,8 +65,12 @@ func _feet_offset() -> float:
 
 
 ## Pinta al player 100% negro (lo usa la puerta al superponerse).
+## Lleva la cuenta de puertas tocando al player: así, si sale de una mientras
+## está en otra (p. ej. al aparecer en una puerta distinta a la inicial), la
+## silueta no se apaga.
 func set_silhouette(enabled: bool) -> void:
-	(sprite.material as ShaderMaterial).set_shader_parameter("amount", 1.0 if enabled else 0.0)
+	_doors_touching = maxi(_doors_touching + (1 if enabled else -1), 0)
+	(sprite.material as ShaderMaterial).set_shader_parameter("amount", 1.0 if _doors_touching > 0 else 0.0)
 
 
 ## La puerta lo llama al apretar UP. Devuelve false si ahora no se puede entrar.
@@ -125,14 +132,19 @@ func _update_ability(delta: float) -> void:
 					_spawn_block()
 					_timer = build_interval
 		State.VANISHING:
+			# Esperar también a que terminen los fades: mientras un bloque se desvanece
+			# sigue siendo sólido, y si volviéramos a NORMAL se podría construir encima.
+			_vanishing = _vanishing.filter(func(b): return is_instance_valid(b))
 			if blocks.is_empty():
-				state = State.NORMAL
+				if _vanishing.is_empty():
+					state = State.NORMAL
 				return
 			_timer -= delta
 			if _timer <= 0.0:
 				var block: Node = blocks.pop_back() if vanish_last_first else blocks.pop_front()
 				if is_instance_valid(block):
 					block.vanish()
+					_vanishing.append(block)
 				_timer = vanish_interval
 
 

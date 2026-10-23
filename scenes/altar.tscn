@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://bxu312q3urj6d"]
+
+[ext_resource type="Script" uid="uid://vhn228labps1" path="res://scenes/altar.gd" id="1_hwdfh"]
+[ext_resource type="Texture2D" uid="uid://byjpwm5nnefa7" path="res://sprites/altar1.png" id="2_agrp7"]
+[ext_resource type="Texture2D" uid="uid://dgyw7piuj3ah1" path="res://sprites/altar2.png" id="3_00bwv"]
+[ext_resource type="Texture2D" uid="uid://bqsekx4rda4iy" path="res://sprites/altar3.png" id="4_uiuje"]
+[ext_resource type="Texture2D" uid="uid://cfkt5471qn0ad" path="res://sprites/altar4.png" id="5_n0xjl"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_hwdfh"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_agrp7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_00bwv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_uiuje")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_n0xjl")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_agrp7"]
+size = Vector2(14, 18)
+
+[node name="Altar" type="Area2D" unique_id=1042846352]
+script = ExtResource("1_hwdfh")
+
+[node name="sprite" type="AnimatedSprite2D" parent="." unique_id=94049248]
+sprite_frames = SubResource("SpriteFrames_hwdfh")
+autoplay = "default"
+frame_progress = 0.8943457
+speed_scale = 3.0
+
+[node name="collider" type="CollisionShape2D" parent="." unique_id=1516910981]
+position = Vector2(0, -1)
+shape = SubResource("RectangleShape2D_agrp7")
