@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Zahoris"
+config/name="Zahori"
 config/description="s"
 run/main_scene="uid://b0q0ud0721e6q"
 config/features=PackedStringArray("4.7", "GL Compatibility")

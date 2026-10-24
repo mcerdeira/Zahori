@@ -3,7 +3,7 @@ extends Area2D
 ## Escena a la que lleva la puerta.
 @export_file("*.tscn") var target_scene: String
 ## Segundos que el player queda bloqueado antes del cambio de escena.
-@export var transition_time: float = 1.3
+@export var transition_time: float = 1.1
 
 var _player: Node = null
 var _entering := false
