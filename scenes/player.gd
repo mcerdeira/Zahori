@@ -135,6 +135,10 @@ func _update_ability(delta: float) -> void:
 			# Esperar también a que terminen los fades: mientras un bloque se desvanece
 			# sigue siendo sólido, y si volviéramos a NORMAL se podría construir encima.
 			_vanishing = _vanishing.filter(func(b): return is_instance_valid(b))
+			# Si se bajó de sus bloques y pisa otro piso, se resetean todos al instante
+			if _on_foreign_floor():
+				_reset_blocks()
+				return
 			if blocks.is_empty():
 				if _vanishing.is_empty():
 					state = State.NORMAL
@@ -146,6 +150,32 @@ func _update_ability(delta: float) -> void:
 					block.vanish()
 					_vanishing.append(block)
 				_timer = vanish_interval
+
+
+## true si está apoyado en un piso que no es uno de sus propios bloques
+## (usa las colisiones del último move_and_slide).
+func _on_foreign_floor() -> bool:
+	if not is_on_floor():
+		return false
+	for i in get_slide_collision_count():
+		var col := get_slide_collision(i)
+		if col.get_normal().dot(up_direction) < 0.7:
+			continue # no es piso (pared o techo)
+		var other := col.get_collider()
+		if other not in blocks and other not in _vanishing:
+			return true
+	return false
+
+
+## Desvanece todos los bloques a la vez y deja la habilidad lista para usar.
+## Los que ya estaban en pleno fade se terminan solos.
+func _reset_blocks() -> void:
+	for block in blocks:
+		if is_instance_valid(block):
+			block.vanish()
+	blocks.clear()
+	_vanishing.clear()
+	state = State.NORMAL
 
 
 ## Eleva al player una celda y pone un bloque donde estaban sus pies.
