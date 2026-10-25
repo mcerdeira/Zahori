@@ -4,7 +4,7 @@ Juego de plataformas 2D en Godot 4.7 (GDScript, renderer GL Compatibility), esti
 
 ## Mecánica principal
 
-El player no salta: mantiene `action` (Z) para generar bloques bajo sus pies y elevarse una celda por bloque (máximo `Global.max_blocks`). Al soltar, los bloques desaparecen uno a uno. Las puertas conectan rooms (se entra con UP) y el agua es muerte instantánea (reaparece en la puerta por la que entró).
+El player no salta: mantiene `action` (Z) para generar bloques bajo sus pies y elevarse una celda por bloque (máximo `Global.max_blocks`). Al soltar, los bloques desaparecen uno a uno y la habilidad no se puede volver a usar hasta que se borre el último, salvo que el player se baje y pise otro piso: ahí se desvanecen todos a la vez y la habilidad queda libre al instante. Las puertas conectan rooms (se entra con UP) y el agua es muerte instantánea (reaparece en la puerta por la que entró).
 
 ## Estructura
 
