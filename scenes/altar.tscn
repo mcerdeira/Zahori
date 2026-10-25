@@ -30,6 +30,7 @@ animations = [{
 size = Vector2(14, 18)
 
 [node name="Altar" type="Area2D" unique_id=1042846352]
+z_index = -4096
 script = ExtResource("1_hwdfh")
 
 [node name="sprite" type="AnimatedSprite2D" parent="." unique_id=94049248]
