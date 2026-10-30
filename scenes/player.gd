@@ -12,7 +12,7 @@ const TILE := 16.0
 @export var build_interval: float = 0.2   # segundos entre cada bloque generado
 @export var vanish_interval: float = 0.35 # segundos entre cada bloque que desaparece
 @export var vanish_last_first: bool = true # true: desaparece primero el de arriba (el último puesto)
-@export var reset_sound_gap: float = 0.06 # segundos entre cada sonido de vanish al resetear
+@export var reset_sound_gap: float = 0.14 # segundos entre cada sonido de vanish al resetear
 @export var step_interval: float = 0.28   # segundos entre pasos al caminar
 @export var land_min_speed: float = 80.0  # px/s de caída mínima para que suene el aterrizaje
 
