@@ -13,6 +13,7 @@ El player no salta: mantiene `action` (Z) para generar bloques bajo sus pies y e
 - `scenes/rooms/`: niveles (`level0`, `level1`, ...). `Intro.tscn` es la escena inicial.
 - `sprites/`: PNGs sueltos con formato `<entidad>_<accion>_spr_<frame>.png` (ver skill `art-maker`).
 - `fonts/`: Pirata One.
+- `sounds/`: efectos `.wav` estilo 8-bit generados con `tools/gen_sfx.py` (editar ahí y volver a correrlo). Se reproducen con el autoload `Sfx` (`scripts/Sfx.gd`): `Sfx.play("nombre", pitch, volumen_db)`.
 
 ## Convenciones
 
