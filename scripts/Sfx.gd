@@ -7,7 +7,6 @@ extends Node
 const SOUNDS := {
 	"block": preload("res://sounds/block.wav"),
 	"vanish": preload("res://sounds/vanish.wav"),
-	"reset": preload("res://sounds/reset.wav"),
 	"land": preload("res://sounds/land.wav"),
 	"step": preload("res://sounds/step.wav"),
 	"door": preload("res://sounds/door.wav"),

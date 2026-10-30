@@ -86,11 +86,6 @@ save("block", square(sweep(330, 520, d), d, 0.25) * env(d, curve=3) * 0.8
 d = 0.12
 save("vanish", triangle(sweep(700, 350, d), d) * env(d, curve=2), 0.35)
 
-# Reset de todos los bloques: barrido descendente rápido
-d = 0.25
-save("reset", square(sweep(900, 180, d), d, 0.125) * env(d, curve=1.5)
-     + lowpass(noise(d), 0.5) * env(d, curve=4) * 0.4, 0.3)
-
 # Aterrizaje: golpe sordo
 d = 0.08
 save("land", lowpass(noise(d, 2), 0.15) * env(d, curve=4)

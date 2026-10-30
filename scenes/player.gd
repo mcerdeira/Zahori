@@ -12,6 +12,7 @@ const TILE := 16.0
 @export var build_interval: float = 0.2   # segundos entre cada bloque generado
 @export var vanish_interval: float = 0.35 # segundos entre cada bloque que desaparece
 @export var vanish_last_first: bool = true # true: desaparece primero el de arriba (el último puesto)
+@export var reset_sound_gap: float = 0.06 # segundos entre cada sonido de vanish al resetear
 @export var step_interval: float = 0.28   # segundos entre pasos al caminar
 @export var land_min_speed: float = 80.0  # px/s de caída mínima para que suene el aterrizaje
 
@@ -192,8 +193,10 @@ func _on_foreign_floor() -> bool:
 ## Desvanece todos los bloques a la vez y deja la habilidad lista para usar.
 ## Los que ya estaban en pleno fade se terminan solos.
 func _reset_blocks() -> void:
-	if not blocks.is_empty():
-		Sfx.play("reset")
+	# Un vanish por bloque, escalonados y de arriba hacia abajo como en el borrado normal
+	for i in blocks.size():
+		var pitch := 1.0 + 0.12 * (blocks.size() - 1 - i)
+		get_tree().create_timer(reset_sound_gap * i).timeout.connect(Sfx.play.bind("vanish", pitch))
 	for block in blocks:
 		if is_instance_valid(block):
 			block.vanish()
