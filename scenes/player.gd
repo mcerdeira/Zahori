@@ -12,6 +12,8 @@ const TILE := 16.0
 @export var build_interval: float = 0.2   # segundos entre cada bloque generado
 @export var vanish_interval: float = 0.35 # segundos entre cada bloque que desaparece
 @export var vanish_last_first: bool = true # true: desaparece primero el de arriba (el último puesto)
+@export var step_interval: float = 0.28   # segundos entre pasos al caminar
+@export var land_min_speed: float = 80.0  # px/s de caída mínima para que suene el aterrizaje
 
 enum State { NORMAL, BUILDING, VANISHING, DOOR }
 
@@ -23,6 +25,7 @@ var _timer := 0.0
 var _door_x := 0.0
 var _respawn_position := Vector2.ZERO
 var _doors_touching := 0 # puertas superpuestas ahora (para la silueta)
+var _step_timer := 0.0
 
 @onready var sprite: AnimatedSprite2D = $sprite
 @onready var collider: CollisionShape2D = $collider
@@ -45,6 +48,7 @@ func _ready() -> void:
 func die() -> void:
 	if state == State.DOOR:
 		return # ya se está yendo por una puerta
+	Sfx.play("die")
 	var fx := EXPLOSION_SCENE.instantiate()
 	fx.global_position = global_position
 	get_parent().add_child(fx)
@@ -79,6 +83,7 @@ func enter_door(door_x: float) -> bool:
 		return false
 	state = State.DOOR
 	_door_x = door_x
+	Sfx.play("door")
 	return true
 
 
@@ -101,8 +106,24 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
 
+	var fall_speed := velocity.y
+	var was_on_floor := is_on_floor()
 	move_and_slide()
+	if is_on_floor() and not was_on_floor and fall_speed >= land_min_speed:
+		Sfx.play("land", randf_range(0.9, 1.1))
+	_update_steps(delta)
 	_update_animation(direction)
+
+
+## Suena un paso cada step_interval mientras camina por el piso.
+func _update_steps(delta: float) -> void:
+	if not is_on_floor() or absf(velocity.x) < speed * 0.3:
+		_step_timer = 0.0 # el primer paso suena apenas arranca
+		return
+	_step_timer -= delta
+	if _step_timer <= 0.0:
+		Sfx.play("step", randf_range(0.85, 1.15))
+		_step_timer = step_interval
 
 
 ## Camina hasta el centro de la puerta (sin pasarse) y ahí se queda.
@@ -149,6 +170,7 @@ func _update_ability(delta: float) -> void:
 				if is_instance_valid(block):
 					block.vanish()
 					_vanishing.append(block)
+					Sfx.play("vanish", 1.0 + 0.12 * blocks.size())
 				_timer = vanish_interval
 
 
@@ -170,6 +192,8 @@ func _on_foreign_floor() -> bool:
 ## Desvanece todos los bloques a la vez y deja la habilidad lista para usar.
 ## Los que ya estaban en pleno fade se terminan solos.
 func _reset_blocks() -> void:
+	if not blocks.is_empty():
+		Sfx.play("reset")
 	for block in blocks:
 		if is_instance_valid(block):
 			block.vanish()
@@ -200,6 +224,7 @@ func _spawn_block() -> void:
 	block.global_position = Vector2(block_x, feet_y - TILE / 2.0)
 	get_parent().add_child(block)
 	blocks.append(block)
+	Sfx.play("block", 1.0 + 0.15 * (blocks.size() - 1))
 
 
 func _update_animation(direction: float) -> void:
