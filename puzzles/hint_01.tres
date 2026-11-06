@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AltarHint" format=3]
+
+[ext_resource type="Script" path="res://scripts/altar_hint.gd" id="1_hint"]
+
+[resource]
+script = ExtResource("1_hint")
+text = "THE ROOTS DO NOT
+FEAR THE WALL.
+THEY GO UP."

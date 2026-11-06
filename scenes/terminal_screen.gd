@@ -1,6 +1,7 @@
 extends Control
 ## Pantalla de la terminal: consola de texto (RichTextLabel para la salida y
-## LineEdit para el prompt) que bootea y después corre el puzzle del glifo.
+## LineEdit para el prompt) que bootea y después corre el puzzle del glifo
+## (o, en un altar de pistas, muestra el texto de la pista).
 ## Todo lo que "escribe" el sistema o el usuario simulado pasa por una cola
 ## que se tipea de a un carácter.
 
@@ -11,6 +12,8 @@ const COLOR := Color(0.55, 0.88, 1.0)
 const SYSTEM := 160.0
 ## "Usuario" tipeando: más lento y con click de tecla.
 const USER := 14.0
+## Texto de las pistas: más lento que el sistema, para que se lea al aparecer.
+const HINT := 45.0
 const CORRECT_BBCODE := "[bgcolor=#8ce0ff][color=#000000]%s[/color][/bgcolor]"
 const PRESENT_BBCODE := "%s"
 const ABSENT_BBCODE := "[color=#8ce0ff40]%s[/color]"
@@ -20,6 +23,8 @@ const ABSENT_BBCODE := "[color=#8ce0ff40]%s[/color]"
 
 ## Número de altar: define el puzzle y el texto de la barra de estado.
 var altar_number := 1
+## Altar de pistas: muestra un texto fijo en vez del glifo.
+var is_hint := false
 var puzzle: GlyphPuzzle
 
 var _log := ""         # bbcode de la salida
@@ -43,7 +48,7 @@ var _toggling := false # altar ya resuelto: se pregunta si prender/apagar la hab
 
 
 func _ready() -> void:
-	status_right.text = "ALTAR-%02d" % altar_number
+	status_right.text = ("HINT-%02d" if is_hint else "ALTAR-%02d") % altar_number
 	input.text_changed.connect(_on_text_changed)
 	input.text_submitted.connect(_on_submitted)
 	if "keep_editing_on_text_submit" in input:
@@ -71,14 +76,15 @@ func skip() -> void:
 func boot() -> void:
 	_type_log("ZAH0R1 OS V1.14\n(C) 1989 ALTAR SYS.\n" + "-".repeat(20) + "\n")
 	_wait(0.3)
-	for check in [["MEMORY", "640K OK"], ["ALTAR LINK", "OK"], ["GLYPHS", "OK"]]:
+	var last_check := "ARCHIVE" if is_hint else "GLYPHS"
+	for check in [["MEMORY", "640K OK"], ["ALTAR LINK", "OK"], [last_check, "OK"]]:
 		_type_log(check[0] + " ")
 		_type_log(".".repeat(18 - check[0].length() - check[1].length()), 18.0)
 		_type_log(" " + check[1] + "\n")
 	_wait(0.4)
 	_then(_show_prompt.bind("C:\\>"))
 	_wait(0.5)
-	_type_input("RUN GLYPH.EXE")
+	_type_input("TYPE HINT.TXT" if is_hint else "RUN GLYPH.EXE")
 	_wait(0.25)
 	_then(_echo_input)
 	_type_log("LOADING...\n")
@@ -175,6 +181,9 @@ func _start() -> void:
 	_log = ""
 	_log_limit = max_log_lines
 	_refresh_log()
+	if is_hint:
+		_start_hint()
+		return
 	puzzle = GlyphPuzzle.for_altar(altar_number)
 	if puzzle == null or puzzle.answer().is_empty():
 		_type_log("ERROR: NO GLYPH DATA\nFOR ALTAR-%02d\n" % altar_number)
@@ -279,6 +288,17 @@ func _unfold_glyph() -> void:
 	# Alineada a la izquierda, como el resto del texto de la consola
 	var left_x := glyphs.global_position.x - target.global_position.x
 	target.unfold_row(left_x, unfold_scale, 0.6)
+
+
+# --- Altar de pistas: sólo se lee el texto -----------------------------------
+
+func _start_hint() -> void:
+	_log_limit = 0
+	var hint := AltarHint.for_altar(altar_number)
+	if hint == null or hint.text.strip_edges().is_empty():
+		_type_log("ERROR: FILE NOT FOUND\nHINT-%02d.TXT\n" % altar_number)
+	else:
+		_type_log(hint.text.strip_edges() + "\n", HINT)
 
 
 # --- Altar ya resuelto: prender/apagar la habilidad --------------------------

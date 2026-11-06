@@ -14,6 +14,8 @@ signal solved(altar_number: int)
 
 ## Lo setea el altar antes de agregar la terminal al árbol.
 var altar_number := 1
+## true si lo abre un altar de pistas (muestra el texto en vez del glifo).
+var is_hint := false
 
 @onready var dim: ColorRect = $dim
 @onready var monitor: Control = $monitor
@@ -28,6 +30,7 @@ var _closing := false
 func _enter_tree() -> void:
 	# Antes del _ready de la pantalla, que arma la barra de estado con el número
 	$monitor/screen/viewport/content.altar_number = altar_number
+	$monitor/screen/viewport/content.is_hint = is_hint
 
 
 func _ready() -> void:
