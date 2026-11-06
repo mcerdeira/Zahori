@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AltarHint" format=3 uid="uid://cy0ikdfqax05t"]
+
+[ext_resource type="Script" uid="uid://oha27pqei3rs" path="res://scripts/altar_hint.gd" id="1_amj2e"]
+
+[resource]
+script = ExtResource("1_amj2e")
+text = "VAPOR LIFTS TO CLOUDS
+RIVERS RISE
+SUN SHINES ON WATER"
