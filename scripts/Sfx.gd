@@ -11,7 +11,12 @@ const SOUNDS := {
 	"step": preload("res://sounds/step.wav"),
 	"door": preload("res://sounds/door.wav"),
 	"die": preload("res://sounds/die.wav"),
-	"start": preload("res://sounds/start.wav"),
+	"chomp": preload("res://sounds/chomp.wav"),
+	"term_on": preload("res://sounds/term_on.wav"),
+	"term_off": preload("res://sounds/term_off.wav"),
+	"term_key": preload("res://sounds/term_key.wav"),
+	"term_ok": preload("res://sounds/term_ok.wav"),
+	"term_err": preload("res://sounds/term_err.wav"),
 }
 
 ## Cantidad de sonidos que pueden sonar a la vez.
@@ -27,6 +32,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for i in voices:
 		var p := AudioStreamPlayer.new()
+		p.bus = &"SFX"
 		add_child(p)
 		_players.append(p)
 

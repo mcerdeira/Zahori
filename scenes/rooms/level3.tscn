@@ -65,6 +65,7 @@ position = Vector2(360, 246)
 
 [node name="Door3" parent="." unique_id=404219897 instance=ExtResource("7_fbhok")]
 position = Vector2(208, 198)
+target_scene = "uid://n2yxbr75om0k"
 
 [node name="Door4" parent="." unique_id=1993725783 instance=ExtResource("7_fbhok")]
 position = Vector2(553, 166)

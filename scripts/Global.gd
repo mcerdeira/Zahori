@@ -1,7 +1,19 @@
 extends Node
 
-## Cantidad máxima de bloques que el player puede generar con la habilidad.
+## Cantidad máxima de bloques que el player puede generar con la habilidad
+## (sin límite con la habilidad reach).
 var max_blocks: int = 4
+
+## Habilidades del player: { &"id": activa }. Todas arrancan apagadas y se
+## desbloquean resolviendo el puzzle del altar correspondiente.
+var abilities: Dictionary = {
+	&"blocks": false,
+	&"hydro": false,
+	&"eat": false, # comer tiles de piedra parado encima con DOWN
+	&"reach": false, # sin límite de bloques (ignora max_blocks)
+}
+## Altares cuyo puzzle ya se resolvió: { numero_de_altar: true }
+var solved_altars: Dictionary = {}
 
 ## true si el player llegó a la room actual atravesando una puerta.
 var came_from_door: bool = false
@@ -9,6 +21,27 @@ var came_from_door: bool = false
 var previous_scene: String = ""
 ## Por cada escena, la puerta por la que se salió la última vez: { "res://...tscn": NodePath }
 var last_door: Dictionary = {}
+
+
+func has_ability(id: StringName) -> bool:
+	return abilities.get(id, false)
+
+
+func set_ability(id: StringName, enabled: bool) -> void:
+	abilities[id] = enabled
+
+
+func is_altar_solved(number: int) -> bool:
+	return solved_altars.has(number)
+
+
+## Marca el altar como resuelto y activa la habilidad que desbloquea su puzzle.
+func solve_altar(number: int, ability_id: StringName) -> void:
+	solved_altars[number] = true
+	if not abilities.has(ability_id):
+		push_warning("Altar %d: ability_id '%s' no existe en Global.abilities" % [number, ability_id])
+		return
+	set_ability(ability_id, true)
 
 
 ## Llamado por la puerta justo antes de cambiar de escena.

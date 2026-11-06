@@ -4,6 +4,10 @@ const BLOCK_SCENE := preload("res://scenes/block.tscn")
 const SILHOUETTE_SHADER := preload("res://scenes/silhouette.gdshader")
 const EXPLOSION_SCENE := preload("res://scenes/explosion.tscn")
 const TILE := 16.0
+## Tope del pitch de los sonidos de bloque (con reach se pueden apilar sin límite).
+const MAX_SFX_PITCH := 1.6
+## Textura de los tiles que se pueden comer con la habilidad eat.
+const EDIBLE_TEXTURE := "res://sprites/block_stone_spr_0.png"
 
 @export var speed: float = 120.0           # px/s horizontal
 @export var acceleration: float = 900.0   # px/s² al arrancar
@@ -15,6 +19,7 @@ const TILE := 16.0
 @export var reset_sound_gap: float = 0.14 # segundos entre cada sonido de vanish al resetear
 @export var step_interval: float = 0.28   # segundos entre pasos al caminar
 @export var land_min_speed: float = 80.0  # px/s de caída mínima para que suene el aterrizaje
+@export var chomp_interval: float = 0.1   # segundos mínimos entre un bloque comido y el siguiente
 
 enum State { NORMAL, BUILDING, VANISHING, DOOR }
 
@@ -27,6 +32,8 @@ var _door_x := 0.0
 var _respawn_position := Vector2.ZERO
 var _doors_touching := 0 # puertas superpuestas ahora (para la silueta)
 var _step_timer := 0.0
+var _chomp_timer := 0.0
+var _chomp_anim := 0.0 # segundos que le quedan a la animación de comer
 
 @onready var sprite: AnimatedSprite2D = $sprite
 @onready var collider: CollisionShape2D = $collider
@@ -42,6 +49,11 @@ func _ready() -> void:
 	if door:
 		global_position = door.spawn_position(_feet_offset())
 	_respawn_position = global_position
+
+
+## El agua no lo mata si tiene la habilidad hydro.
+func resists_water() -> bool:
+	return Global.has_ability(&"hydro")
 
 
 ## Muerte instantánea: explota y reaparece en la puerta por la que entró
@@ -60,6 +72,7 @@ func die() -> void:
 	blocks.clear()
 	_vanishing.clear()
 	state = State.NORMAL
+	_chomp_anim = 0.0
 	velocity = Vector2.ZERO
 	global_position = _respawn_position
 
@@ -76,6 +89,12 @@ func _feet_offset() -> float:
 func set_silhouette(enabled: bool) -> void:
 	_doors_touching = maxi(_doors_touching + (1 if enabled else -1), 0)
 	(sprite.material as ShaderMaterial).set_shader_parameter("amount", 1.0 if _doors_touching > 0 else 0.0)
+
+
+## true si puede usar un objeto del mundo (p. ej. el altar): parado en el piso
+## y sin estar construyendo ni entrando por una puerta.
+func can_interact() -> bool:
+	return is_on_floor() and state != State.BUILDING and state != State.DOOR
 
 
 ## La puerta lo llama al apretar UP. Devuelve false si ahora no se puede entrar.
@@ -138,19 +157,29 @@ func _walk_to_door_center(delta: float) -> void:
 
 
 func _update_ability(delta: float) -> void:
+	_chomp_timer -= delta
+	_chomp_anim -= delta
 	match state:
 		State.NORMAL:
-			if Input.is_action_just_pressed("action") and is_on_floor():
+			if Input.is_action_just_pressed("action") and is_on_floor() \
+					and Global.has_ability(&"blocks"):
 				state = State.BUILDING
 				velocity.x = 0.0
 				_timer = 0.0 # el primer bloque sale al instante
+			# Manteniendo DOWN come el bloque de abajo, cae al siguiente y lo come
+			# también, pero sólo cuando está apoyado (nunca en el aire)
+			elif Input.is_action_pressed("DOWN") and is_on_floor() \
+					and _chomp_timer <= 0.0 and Global.has_ability(&"eat"):
+				if _chomp():
+					_chomp_timer = chomp_interval
 		State.BUILDING:
 			if not Input.is_action_pressed("action"):
 				state = State.VANISHING
 				_timer = 0.0
 			else:
 				_timer -= delta
-				if _timer <= 0.0 and blocks.size() < Global.max_blocks:
+				if _timer <= 0.0 and (blocks.size() < Global.max_blocks \
+						or Global.has_ability(&"reach")):
 					_spawn_block()
 					_timer = build_interval
 		State.VANISHING:
@@ -171,7 +200,7 @@ func _update_ability(delta: float) -> void:
 				if is_instance_valid(block):
 					block.vanish()
 					_vanishing.append(block)
-					Sfx.play("vanish", 1.0 + 0.12 * blocks.size())
+					Sfx.play("vanish", minf(1.0 + 0.12 * blocks.size(), MAX_SFX_PITCH))
 				_timer = vanish_interval
 
 
@@ -195,7 +224,7 @@ func _on_foreign_floor() -> bool:
 func _reset_blocks() -> void:
 	# Un vanish por bloque, escalonados y de arriba hacia abajo como en el borrado normal
 	for i in blocks.size():
-		var pitch := 1.0 + 0.12 * (blocks.size() - 1 - i)
+		var pitch := minf(1.0 + 0.12 * (blocks.size() - 1 - i), MAX_SFX_PITCH)
 		get_tree().create_timer(reset_sound_gap * i).timeout.connect(Sfx.play.bind("vanish", pitch))
 	for block in blocks:
 		if is_instance_valid(block):
@@ -203,6 +232,43 @@ func _reset_blocks() -> void:
 	blocks.clear()
 	_vanishing.clear()
 	state = State.NORMAL
+
+
+## Come el tile que tiene justo debajo del centro si es de piedra (los bloques
+## verdes de la habilidad son nodos, no tiles, así que nunca se comen).
+## Lo centra en la celda para que caiga por el hueco. Devuelve true si comió.
+func _chomp() -> bool:
+	var below := global_position + Vector2(collider.position.x, _feet_offset() + TILE / 2.0)
+	for i in get_slide_collision_count():
+		var layer := get_slide_collision(i).get_collider() as TileMapLayer
+		if layer == null:
+			continue
+		var cell := layer.local_to_map(layer.to_local(below))
+		if not _is_edible(layer, cell):
+			continue
+		layer.erase_cell(cell)
+		var target_x := layer.to_global(layer.map_to_local(cell)).x - collider.position.x
+		# Se prueba un pixel más arriba para que el piso no cuente como choque
+		if not test_move(global_transform.translated(Vector2(0, -1)), Vector2(target_x - global_position.x, 0)):
+			global_position.x = target_x
+		velocity.x = 0.0
+		Sfx.play("chomp", randf_range(0.9, 1.1))
+		# Cada bocado arranca la animación de cero (tiene prioridad sobre caer)
+		var frames := sprite.sprite_frames
+		_chomp_anim = frames.get_frame_count(&"chomp") / frames.get_animation_speed(&"chomp")
+		sprite.play(&"chomp")
+		sprite.frame = 0
+		return true
+	return false
+
+
+static func _is_edible(layer: TileMapLayer, cell: Vector2i) -> bool:
+	var source_id := layer.get_cell_source_id(cell)
+	if source_id < 0:
+		return false
+	var source := layer.tile_set.get_source(source_id) as TileSetAtlasSource
+	return source != null and source.texture != null \
+			and source.texture.resource_path == EDIBLE_TEXTURE
 
 
 ## Eleva al player una celda y pone un bloque donde estaban sus pies.
@@ -227,7 +293,7 @@ func _spawn_block() -> void:
 	block.global_position = Vector2(block_x, feet_y - TILE / 2.0)
 	get_parent().add_child(block)
 	blocks.append(block)
-	Sfx.play("block", 1.0 + 0.15 * (blocks.size() - 1))
+	Sfx.play("block", minf(1.0 + 0.15 * (blocks.size() - 1), MAX_SFX_PITCH))
 
 
 func _update_animation(direction: float) -> void:
@@ -235,6 +301,8 @@ func _update_animation(direction: float) -> void:
 		sprite.play("build")
 	elif state == State.DOOR:
 		sprite.play("walk")
+	elif _chomp_anim > 0.0:
+		sprite.play("chomp")
 	elif not is_on_floor():
 		sprite.play("fall")
 	elif direction != 0.0:

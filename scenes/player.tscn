@@ -13,9 +13,29 @@
 [ext_resource type="Texture2D" uid="uid://cxf2ddc3t77wt" path="res://sprites/player_fall_spr_1.png" id="4_y4r1p"]
 [ext_resource type="Texture2D" uid="uid://bv08xal8gyoch" path="res://sprites/player_walk_spr_2.png" id="5_y4r1p"]
 [ext_resource type="Texture2D" uid="uid://bno0ipdcahwrg" path="res://sprites/player_walk_spr_3.png" id="6_d2wvv"]
-
+[ext_resource type="Texture2D" uid="uid://dxhdjtuk6sxg7" path="res://sprites/player_chomp_spr_0.png" id="chomp_0"]
+[ext_resource type="Texture2D" uid="uid://cl60soibcknd8" path="res://sprites/player_chomp_spr_1.png" id="chomp_1"]
+[ext_resource type="Texture2D" uid="uid://bndc7g1x0fy61" path="res://sprites/player_chomp_spr_2.png" id="chomp_2"]
+[ext_resource type="Texture2D" uid="uid://df1kn08mty337" path="res://sprites/player_chomp_spr_3.png" id="chomp_3"]
 [sub_resource type="SpriteFrames" id="SpriteFrames_2l2dv"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("chomp_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("chomp_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("chomp_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("chomp_3")
+}],
+"loop": false,
+"name": &"chomp",
+"speed": 12.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("1_3v2ag")

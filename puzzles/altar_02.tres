@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="GlyphPuzzle" format=3]
+
+[ext_resource type="Script" path="res://scripts/glyph_puzzle.gd" id="1_puzzle"]
+
+[resource]
+script = ExtResource("1_puzzle")
+word = "HYDRO"
+ability = "HYDRO RESIST"
+ability_id = &"hydro"

@@ -28,7 +28,7 @@ offset_bottom = 319.0
 theme_override_fonts/normal_font = ExtResource("2_hc7eg")
 theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
-text = "[wave amp=50.0 freq=5.0 connected=1]“It has been told since time out of mind that the [rainbow]Zahorí[/rainbow] can bend their influence over certain elements through the stone tablets.”
+text = "[wave amp=50.0 freq=5.0 connected=1]“It has been told since time out of mind that the [rainbow]Zahorí[/rainbow] can bend their influence over certain [rainbow]elements[/rainbow] through the [rainbow]glyph altars[/rainbow].”
 — Unknown scribe[/wave]"
 horizontal_alignment = 1
 vertical_alignment = 1

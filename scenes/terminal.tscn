@@ -1,0 +1,171 @@
+[gd_scene format=3 uid="uid://bos6ngarlx5uc"]
+
+[ext_resource type="Script" uid="uid://dqeiiycu5jxf1" path="res://scenes/terminal.gd" id="1_term"]
+[ext_resource type="Script" uid="uid://4yspueclbp7w" path="res://scenes/terminal_screen.gd" id="2_screen"]
+[ext_resource type="Shader" uid="uid://cjrm1oa0ns678" path="res://scenes/crt.gdshader" id="3_crt"]
+[ext_resource type="Theme" uid="uid://duvhwd018i2cc" path="res://scenes/terminal_theme.tres" id="4_theme"]
+[ext_resource type="Script" uid="uid://og1ppondxpm3" path="res://scenes/glyph_view.gd" id="5_glyph"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bezel"]
+bg_color = Color(0.11, 0.115, 0.14, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.26, 0.27, 0.33, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("3_crt")
+shader_parameter/glow = 0.9
+shader_parameter/scanlines = 0.2
+shader_parameter/flicker = 0.03
+shader_parameter/vignette = 0.5
+shader_parameter/band_speed = 0.18
+shader_parameter/phosphor = Color(0.015, 0.035, 0.055, 1)
+
+[node name="Terminal" type="CanvasLayer" unique_id=1394648114]
+process_mode = 3
+layer = 10
+script = ExtResource("1_term")
+
+[node name="dim" type="ColorRect" parent="." unique_id=1427254847]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="monitor" type="Panel" parent="." unique_id=68457726]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -96.0
+offset_top = -96.0
+offset_right = 96.0
+offset_bottom = 96.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bezel")
+
+[node name="screen" type="TextureRect" parent="monitor" unique_id=1011216865]
+material = SubResource("ShaderMaterial_crt")
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 184.0
+offset_bottom = 184.0
+
+[node name="viewport" type="SubViewport" parent="monitor/screen" unique_id=1772295996]
+canvas_item_default_texture_filter = 0
+size = Vector2i(176, 176)
+render_target_update_mode = 4
+
+[node name="content" type="Control" parent="monitor/screen/viewport" unique_id=188920523]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 176.0
+offset_bottom = 176.0
+theme = ExtResource("4_theme")
+script = ExtResource("2_screen")
+
+[node name="vbox" type="VBoxContainer" parent="monitor/screen/viewport/content" unique_id=1981217608]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 168.0
+offset_bottom = 156.0
+theme_override_constants/separation = 2
+
+[node name="glyphs" type="HBoxContainer" parent="monitor/screen/viewport/content/vbox" unique_id=819393492]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="target_col" type="VBoxContainer" parent="monitor/screen/viewport/content/vbox/glyphs" unique_id=1971649140]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="target" type="Control" parent="monitor/screen/viewport/content/vbox/glyphs/target_col" unique_id=952609395]
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("5_glyph")
+
+[node name="typed_col" type="VBoxContainer" parent="monitor/screen/viewport/content/vbox/glyphs" unique_id=200650413]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="typed" type="Control" parent="monitor/screen/viewport/content/vbox/glyphs/typed_col" unique_id=398284590]
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("5_glyph")
+
+[node name="glyphs_gap" type="Control" parent="monitor/screen/viewport/content/vbox"]
+visible = false
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="log" type="RichTextLabel" parent="monitor/screen/viewport/content/vbox" unique_id=212146400]
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="prompt_row" type="HBoxContainer" parent="monitor/screen/viewport/content/vbox" unique_id=528386253]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="prompt" type="Label" parent="monitor/screen/viewport/content/vbox/prompt_row" unique_id=1513296370]
+layout_mode = 2
+text = ">"
+
+[node name="input" type="LineEdit" parent="monitor/screen/viewport/content/vbox/prompt_row" unique_id=37393865]
+layout_mode = 2
+size_flags_horizontal = 3
+context_menu_enabled = false
+caret_blink = true
+caret_blink_interval = 0.45
+
+[node name="status_bar" type="ColorRect" parent="monitor/screen/viewport/content" unique_id=790062762]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 158.0
+offset_right = 170.0
+offset_bottom = 168.0
+color = Color(0.55, 0.88, 1, 1)
+
+[node name="status_left" type="Label" parent="monitor/screen/viewport/content/status_bar" unique_id=2013856827]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 1.0
+offset_right = 82.0
+offset_bottom = 9.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "ESC: EXIT"
+
+[node name="status_right" type="Label" parent="monitor/screen/viewport/content/status_bar" unique_id=1788465228]
+layout_mode = 0
+offset_left = 82.0
+offset_top = 1.0
+offset_right = 162.0
+offset_bottom = 9.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "ALTAR-01"
+horizontal_alignment = 2
+
+[node name="led" type="ColorRect" parent="monitor" unique_id=1527908971]
+layout_mode = 0
+offset_left = 178.0
+offset_top = 187.0
+offset_right = 182.0
+offset_bottom = 189.0
+color = Color(0.4509804, 0.8784314, 0.40392157, 1)

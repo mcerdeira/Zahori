@@ -95,11 +95,19 @@ save("land", lowpass(noise(d, 2), 0.15) * env(d, curve=4)
 d = 0.03
 save("step", lowpass(noise(d), 0.25) * env(d, attack=0.001, curve=5), 0.25)
 
-# Puerta: arpegio ascendente
-notes = [392, 523, 659, 784]
-nd = 0.08
-save("door", concat(*[square(f, nd, 0.5) * env(nd, curve=1.2) for f in notes[:-1]],
-                    square(notes[-1], 0.25, 0.5) * env(0.25, curve=2)), 0.3)
+# Puerta: pasos bajando una escalera (cada escalón más grave y un poco más rápido).
+# Usa su propio rng para no alterar el ruido de los demás sonidos.
+door_rng = np.random.default_rng(11)
+steps = []
+for i, (f, gap) in enumerate([(220, 0.13), (185, 0.12), (155, 0.11), (130, 0.0)]):
+    d = 0.07
+    n = int(RATE * d)
+    grit = np.repeat(door_rng.uniform(-1, 1, n // 2 + 1), 2)[:n]
+    thud = (lowpass(grit, 0.2) * env(d, attack=0.001, curve=5)
+            + triangle(sweep(f, f * 0.55, d), d) * env(d, attack=0.001, curve=3) * 0.9)
+    steps.append(thud * (1.0 - i * 0.08))
+    steps.append(np.zeros(int(RATE * gap)))
+save("door", concat(*steps), 0.45)
 
 # Muerte en el agua: chapuzón + explosión
 d = 0.5
@@ -111,3 +119,44 @@ save("die", splash * 0.8 + boom + square(sweep(300, 40, d), d) * env(d, curve=4)
 nd = 0.1
 save("start", concat(*[triangle(f, nd) * env(nd, curve=1) for f in (523, 659, 784)],
                      triangle(1047, 0.5) * env(0.5, curve=2)), 0.4)
+
+# Terminal: rng propio para no alterar el ruido de los demás sonidos
+term_rng = np.random.default_rng(23)
+
+# Encendido del monitor: zumbido grave que sube + pitido agudo del tubo
+d = 0.4
+hum = square(sweep(50, 120, d), d, 0.5) * env(d, attack=0.01, curve=2)
+whine = triangle(3520.0, d) * np.linspace(0, 1, len(t(d))) * env(d, attack=0.0, curve=0.6)
+save("term_on", hum * 0.6 + whine * 0.2, 0.35)
+
+# Apagado del monitor: "piuu" descendente
+d = 0.2
+save("term_off", square(sweep(600, 60, d), d, 0.25) * env(d, curve=1.5), 0.3)
+
+# Tecla: click seco y muy corto
+d = 0.018
+click = term_rng.uniform(-1, 1, len(t(d)))
+save("term_key", (click - lowpass(click, 0.3)) * env(d, attack=0.0005, curve=4), 0.3)
+
+# Glifo descifrado: dos pitidos ascendentes
+nd = 0.09
+save("term_ok", concat(square(880, nd, 0.5) * env(nd, curve=0.8),
+                       square(1320, 0.2, 0.5) * env(0.2, curve=2)), 0.25)
+
+# Intento fallido: zumbido grave
+d = 0.22
+save("term_err", square(110, d, 0.5) * env(d, attack=0.002, curve=1.2)
+     + square(116, d, 0.5) * env(d, attack=0.002, curve=1.2), 0.25)
+
+# Mordida (habilidad eat): dos crujidos rápidos, el segundo más grave.
+# Usa su propio rng para no alterar el ruido de los demás sonidos.
+chomp_rng = np.random.default_rng(31)
+bites = []
+for f, gap in [(260, 0.035), (170, 0.0)]:
+    d = 0.06
+    n = int(RATE * d)
+    grit = np.repeat(chomp_rng.uniform(-1, 1, n // 3 + 1), 3)[:n]
+    bites.append(lowpass(grit, 0.5) * env(d, attack=0.001, curve=4)
+                 + square(sweep(f, f * 0.5, d), d, 0.25) * env(d, attack=0.001, curve=3) * 0.6)
+    bites.append(np.zeros(int(RATE * gap)))
+save("chomp", concat(*bites), 0.45)
