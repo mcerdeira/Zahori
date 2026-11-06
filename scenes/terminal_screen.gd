@@ -48,7 +48,7 @@ var _toggling := false # altar ya resuelto: se pregunta si prender/apagar la hab
 
 
 func _ready() -> void:
-	status_right.text = ("HINT-%02d" if is_hint else "ALTAR-%02d") % altar_number
+	status_right.text = "ALTAR-%02d" % altar_number
 	input.text_changed.connect(_on_text_changed)
 	input.text_submitted.connect(_on_submitted)
 	if "keep_editing_on_text_submit" in input:
@@ -84,7 +84,7 @@ func boot() -> void:
 	_wait(0.4)
 	_then(_show_prompt.bind("C:\\>"))
 	_wait(0.5)
-	_type_input("TYPE HINT.TXT" if is_hint else "RUN GLYPH.EXE")
+	_type_input(("ALTAR-%02d.TXT" % altar_number) if is_hint else "RUN GLYPH.EXE")
 	_wait(0.25)
 	_then(_echo_input)
 	_type_log("LOADING...\n")
@@ -296,7 +296,7 @@ func _start_hint() -> void:
 	_log_limit = 0
 	var hint := AltarHint.for_altar(altar_number)
 	if hint == null or hint.text.strip_edges().is_empty():
-		_type_log("ERROR: FILE NOT FOUND\nHINT-%02d.TXT\n" % altar_number)
+		_type_log("ERROR: FILE NOT FOUND\nALTAR-%02d.TXT\n" % altar_number)
 	else:
 		_type_log(hint.text.strip_edges() + "\n", HINT)
 

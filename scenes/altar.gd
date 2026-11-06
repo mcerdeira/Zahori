@@ -13,7 +13,7 @@ enum Kind { PUZZLE, HINT }
 ## PUZZLE: corre el glifo. HINT: muestra la pista de res://puzzles/hint_XX.tres.
 @export var kind: Kind = Kind.PUZZLE
 ## Número de altar: elige el puzzle (res://puzzles/altar_XX.tres) o la pista
-## (res://puzzles/hint_XX.tres) y se muestra como ALTAR-XX o HINT-XX.
+## (res://puzzles/hint_XX.tres) y se muestra como ALTAR-XX en los dos casos.
 @export var altar_number: int = 1
 
 var _player: Node = null
