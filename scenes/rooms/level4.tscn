@@ -76,5 +76,4 @@ scale = Vector2(12, 1)
 
 [node name="Altar" parent="." unique_id=1042846352 instance=ExtResource("9_lhjcq")]
 position = Vector2(215, 168)
-kind = 1
 altar_number = 2
