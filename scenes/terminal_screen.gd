@@ -74,7 +74,7 @@ func skip() -> void:
 
 
 func boot() -> void:
-	_type_log("ZAH0R1 OS V1.14\n(C) 1989 ALTAR SYS.\n" + "-".repeat(20) + "\n")
+	_type_log("ALTAR OS V1.14\n(C) 1989 TEMPLE SYS.\n" + "-".repeat(20) + "\n")
 	_wait(0.3)
 	var last_check := "ARCHIVE" if is_hint else "GLYPHS"
 	for check in [["MEMORY", "640K OK"], ["ALTAR LINK", "OK"], [last_check, "OK"]]:

@@ -160,3 +160,43 @@ for f, gap in [(260, 0.035), (170, 0.0)]:
                  + square(sweep(f, f * 0.5, d), d, 0.25) * env(d, attack=0.001, curve=3) * 0.6)
     bites.append(np.zeros(int(RATE * gap)))
 save("chomp", concat(*bites), 0.45)
+
+# Voz sintética de la intro (fonemas inventados, estilo "animalese" grave y
+# solemne): una sílaba por letra. 5 vocales x 3 ataques -> voice_<ataque><vocal>.wav
+# Fuente glotal (diente de sierra con vibrato y caída de tono) pasada por dos
+# formantes resonantes, como una vocal humana muy simplificada.
+from scipy.signal import iirpeak, lfilter, sawtooth
+
+voice_rng = np.random.default_rng(53)
+FORMANTS = {"a": (730, 1090), "e": (530, 1840), "i": (300, 2200),
+            "o": (570, 840), "u": (320, 800)}
+VOICE_F0 = 98.0   # Hz, tono base (grave)
+VOICE_DUR = 0.13  # segundos por sílaba
+
+
+def formant_vowel(f1, f2, dur, f0=VOICE_F0):
+    x = t(dur)
+    freq = f0 * (1.0 - 0.06 * x / dur) * (1.0 + 0.012 * np.sin(2 * np.pi * 5.5 * x))
+    src = sawtooth(2 * np.pi * np.cumsum(freq) / RATE)
+    src += voice_rng.uniform(-1, 1, len(x)) * 0.05  # algo de aire
+    out = np.zeros_like(src)
+    for f, q, g in ((f1, 6, 1.0), (f2, 9, 0.6), (2600, 10, 0.15)):
+        b, a = iirpeak(f, q, RATE)
+        out += lfilter(b, a, src) * g
+    return out
+
+
+for v, (f1, f2) in FORMANTS.items():
+    d = VOICE_DUR
+    vowel = formant_vowel(f1, f2, d)
+    e = env(d, attack=0.012, curve=1.4)
+    # sola: vocal pura
+    save(f"voice_{v}", vowel * e, 0.5)
+    # "m": arranca nasal (formante grave, sin brillo) y se abre a la vocal
+    nasal = formant_vowel(250, 900, d)
+    mix = np.clip(t(d) / 0.035, 0, 1)
+    save(f"voice_m{v}", (nasal * (1 - mix) * 0.7 + vowel * mix) * e, 0.5)
+    # "k": golpecito de ruido filtrado antes de la vocal
+    bd = 0.018
+    burst = lowpass(voice_rng.uniform(-1, 1, int(RATE * bd)), 0.6) * env(bd, attack=0.0005, curve=2)
+    save(f"voice_k{v}", concat(burst * 0.5, (vowel * e)[: int(RATE * (d - bd))]), 0.5)

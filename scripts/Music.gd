@@ -11,8 +11,7 @@ const MAIN_THEME := preload("res://music/main_theme.ogg")
 
 var _player: AudioStreamPlayer
 
-
-func _ready() -> void:
+func play_main_theme() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_player = AudioStreamPlayer.new()
 	_player.bus = &"Music"
@@ -22,4 +21,3 @@ func _ready() -> void:
 	_player.stream = stream
 	_player.volume_db = volume_db
 	_player.play()
-

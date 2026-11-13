@@ -75,6 +75,8 @@ func die() -> void:
 	_chomp_anim = 0.0
 	velocity = Vector2.ZERO
 	global_position = _respawn_position
+	# Que una puerta instantánea en el punto de respawn no lo mande de vuelta
+	get_tree().call_group("doors", "rearm")
 
 
 func _feet_offset() -> float:
@@ -166,10 +168,9 @@ func _update_ability(delta: float) -> void:
 				state = State.BUILDING
 				velocity.x = 0.0
 				_timer = 0.0 # el primer bloque sale al instante
-			# Manteniendo DOWN come el bloque de abajo, cae al siguiente y lo come
-			# también, pero sólo cuando está apoyado (nunca en el aire)
-			elif Input.is_action_pressed("DOWN") and is_on_floor() \
-					and _chomp_timer <= 0.0 and Global.has_ability(&"eat"):
+			# Con eat activa come solo el bloque que pisa, cae al siguiente y lo
+			# come también, pero sólo cuando está apoyado (nunca en el aire)
+			elif is_on_floor() and _chomp_timer <= 0.0 and Global.has_ability(&"eat"):
 				if _chomp():
 					_chomp_timer = chomp_interval
 		State.BUILDING:

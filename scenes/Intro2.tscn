@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://c5bihr8rvly2l"]
+
+[ext_resource type="Shader" uid="uid://y53i2lhrg154" path="res://scenes/fx.gdshader" id="1_45dpb"]
+[ext_resource type="Script" uid="uid://baxnxp7p3sawk" path="res://scenes/intro2.gd" id="1_aqbct"]
+[ext_resource type="FontFile" uid="uid://cyy1mfwfjcwwk" path="res://fonts/PirataOne-Regular.ttf" id="2_hc7eg"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hc7eg"]
+shader = ExtResource("1_45dpb")
+shader_parameter/amount = 0.2
+
+[node name="Intro2" type="Node2D" unique_id=1461675898]
+script = ExtResource("1_aqbct")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=220832772]
+top_level = true
+material = SubResource("ShaderMaterial_hc7eg")
+offset_left = -14.0
+offset_top = -18.0
+offset_right = 589.0
+offset_bottom = 341.0
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=2128878467]
+anchor_mode = 0
+
+[node name="RichTextLabel" type="RichTextLabel" parent="." unique_id=1413850786]
+offset_right = 576.0
+offset_bottom = 319.0
+theme_override_fonts/normal_font = ExtResource("2_hc7eg")
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+horizontal_alignment = 1
+vertical_alignment = 1
