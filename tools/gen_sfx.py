@@ -161,6 +161,11 @@ for f, gap in [(260, 0.035), (170, 0.0)]:
     bites.append(np.zeros(int(RATE * gap)))
 save("chomp", concat(*bites), 0.45)
 
+# Varita zahorí: "ping" cristalino corto (el código lo repite más rápido y más
+# agudo cuanto más cerca está la puerta correcta). Sin ruido: no toca el rng.
+d = 0.12
+save("dowse", (triangle(1568, d) + triangle(2352, d) * 0.35) * env(d, attack=0.002, curve=3), 0.3)
+
 # Voz sintética de la intro (fonemas inventados, estilo "animalese" grave y
 # solemne): una sílaba por letra. 5 vocales x 3 ataques -> voice_<ataque><vocal>.wav
 # Fuente glotal (diente de sierra con vibrato y caída de tono) pasada por dos

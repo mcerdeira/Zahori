@@ -86,6 +86,6 @@ altar_number = 2
 [node name="Door5" parent="." unique_id=658294955 instance=ExtResource("7_fbhok")]
 position = Vector2(319, -10)
 scale = Vector2(4, 1)
-target_scene = "uid://bnc70417e4goo"
+target_scene = "uid://bewkhkslkgvmu"
 transition_time = 0.2
 instant = true

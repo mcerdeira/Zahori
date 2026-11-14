@@ -19,7 +19,6 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	if instant:
-		$sprite.visible = false
 		rearm()
 
 ## Sólo para instant: se desarma y se vuelve a armar si el player no está encima.
@@ -50,6 +49,12 @@ func _enter() -> void:
 		await get_tree().create_timer(transition_time).timeout
 	if target_scene.is_empty():
 		push_warning("Door '%s' no tiene target_scene configurada" % name)
+		return
+	if DoorMaze.is_maze_door(self):
+		# Puerta del laberinto: el destino lo decide DoorMaze. El player aparece
+		# en su posición inicial de la room (la entrada), no en una puerta.
+		Global.came_from_door = false
+		get_tree().change_scene_to_file(DoorMaze.resolve(self))
 		return
 	Global.register_door_exit(self)
 	get_tree().change_scene_to_file(target_scene)

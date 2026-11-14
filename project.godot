@@ -24,6 +24,7 @@ Global="*uid://vgjbrcqyc5gm"
 Sfx="*res://scripts/Sfx.gd"
 Music="*res://scripts/Music.gd"
 Pause="*res://scripts/Pause.gd"
+DoorMaze="*res://scripts/DoorMaze.gd"
 
 [display]
 

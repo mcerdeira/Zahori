@@ -77,7 +77,10 @@ def collect():
 
     rooms, edges = {}, []
     for f in sorted(ROOMS_DIR.glob("level*.tscn")):
-        num = int(LEVEL_RE.search(f.name).group(1))
+        m = LEVEL_RE.search(f.name)
+        if not m:
+            continue  # rooms internas del laberinto de puertas (level181a, ...)
+        num = int(m.group(1))
         _, doors, altars = parse_scene(f)
         rooms[num] = {"missing": False, "altars": altars, "doors": doors}
 
@@ -86,6 +89,8 @@ def collect():
             if not target:
                 print(f"aviso: level{num} tiene una puerta sin target_scene")
                 continue
+            if target == "-1":
+                continue  # puerta del laberinto (la resuelve DoorMaze en el juego)
             if target.isdigit():
                 dest = int(target)
             else:

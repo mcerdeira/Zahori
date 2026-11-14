@@ -17,6 +17,7 @@ const EDIBLE_TEXTURE := "res://sprites/block_stone_spr_0.png"
 @export var vanish_interval: float = 0.35 # segundos entre cada bloque que desaparece
 @export var vanish_last_first: bool = true # true: desaparece primero el de arriba (el último puesto)
 @export var reset_sound_gap: float = 0.14 # segundos entre cada sonido de vanish al resetear
+@export var max_reset_sounds: int = 4     # tope de sonidos de vanish al resetear (con reach puede haber muchos bloques)
 @export var step_interval: float = 0.28   # segundos entre pasos al caminar
 @export var land_min_speed: float = 80.0  # px/s de caída mínima para que suene el aterrizaje
 @export var chomp_interval: float = 0.1   # segundos mínimos entre un bloque comido y el siguiente
@@ -223,9 +224,12 @@ func _on_foreign_floor() -> bool:
 ## Desvanece todos los bloques a la vez y deja la habilidad lista para usar.
 ## Los que ya estaban en pleno fade se terminan solos.
 func _reset_blocks() -> void:
-	# Un vanish por bloque, escalonados y de arriba hacia abajo como en el borrado normal
-	for i in blocks.size():
-		var pitch := minf(1.0 + 0.12 * (blocks.size() - 1 - i), MAX_SFX_PITCH)
+	# Un vanish por bloque, escalonados y de arriba hacia abajo como en el borrado normal,
+	# pero como mucho max_reset_sounds: los bloques se van todos a la vez y una tira
+	# larga de sonidos (con reach) seguiría sonando cuando ya no queda ninguno.
+	var sounds := mini(blocks.size(), max_reset_sounds)
+	for i in sounds:
+		var pitch := minf(1.0 + 0.12 * (sounds - 1 - i), MAX_SFX_PITCH)
 		get_tree().create_timer(reset_sound_gap * i).timeout.connect(Sfx.play.bind("vanish", pitch))
 	for block in blocks:
 		if is_instance_valid(block):

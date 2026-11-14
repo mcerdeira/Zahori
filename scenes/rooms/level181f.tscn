@@ -1,0 +1,149 @@
+[gd_scene format=4 uid="uid://covmcryvtyndv"]
+
+[ext_resource type="Script" uid="uid://c8x4wqra5s03g" path="res://scenes/rooms/main.gd" id="1_gcma7"]
+[ext_resource type="PackedScene" uid="uid://biaqbauc3q4v4" path="res://scenes/player.tscn" id="2_2lj8t"]
+[ext_resource type="Texture2D" uid="uid://mins02wp62tt" path="res://sprites/block_stone_spr_0.png" id="3_akl7r"]
+[ext_resource type="Texture2D" uid="uid://4uaus4dh3j13" path="res://sprites/block_tech_spr_0.png" id="4_af7o0"]
+[ext_resource type="Texture2D" uid="uid://7lfl0kqbwbl5" path="res://sprites/floor_temple_top_spr_0.png" id="5_4a62b"]
+[ext_resource type="Texture2D" uid="uid://boydkjknkxd7y" path="res://sprites/floor_temple_spr_0.png" id="6_si1oi"]
+[ext_resource type="Texture2D" uid="uid://mwepmps5rv5f" path="res://sprites/floor_ice_spr_0.png" id="7_s3bbp"]
+[ext_resource type="Texture2D" uid="uid://dwgnnpivnb0w4" path="res://sprites/water_sheet_spr.png" id="8_l6f33"]
+[ext_resource type="Texture2D" uid="uid://d28xeb4aidalq" path="res://sprites/floor_volcanic_spr_0.png" id="9_pki0i"]
+[ext_resource type="Texture2D" uid="uid://c5pxy6vr02xhk" path="res://sprites/floor_volcanic_top_spr_0.png" id="10_urq3b"]
+[ext_resource type="Shader" uid="uid://y53i2lhrg154" path="res://scenes/fx.gdshader" id="11_mdsxr"]
+[ext_resource type="PackedScene" uid="uid://8pofk8g1gd5i" path="res://scenes/door.tscn" id="12_o4lnp"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jyhfs"]
+texture = ExtResource("3_akl7r")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tbgi4"]
+texture = ExtResource("4_af7o0")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o867f"]
+texture = ExtResource("5_4a62b")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y16s3"]
+texture = ExtResource("6_si1oi")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tqysk"]
+texture = ExtResource("7_s3bbp")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_el85t"]
+texture = ExtResource("8_l6f33")
+0:0/animation_columns = 2
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_d6wwt"]
+texture = ExtResource("9_pki0i")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_aqg5f"]
+texture = ExtResource("10_urq3b")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSet" id="TileSet_jej6c"]
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_jyhfs")
+sources/1 = SubResource("TileSetAtlasSource_tbgi4")
+sources/5 = SubResource("TileSetAtlasSource_el85t")
+sources/2 = SubResource("TileSetAtlasSource_o867f")
+sources/3 = SubResource("TileSetAtlasSource_y16s3")
+sources/4 = SubResource("TileSetAtlasSource_tqysk")
+sources/6 = SubResource("TileSetAtlasSource_d6wwt")
+sources/7 = SubResource("TileSetAtlasSource_aqg5f")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jyhfs"]
+shader = ExtResource("11_mdsxr")
+shader_parameter/amount = 0.2
+
+[node name="Main" type="Node2D" unique_id=1210615546]
+script = ExtResource("1_gcma7")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=880454566]
+anchor_mode = 0
+
+[node name="Player" parent="." unique_id=1897144092 instance=ExtResource("2_2lj8t")]
+position = Vector2(25, 152)
+
+[node name="LevelTiles" type="TileMapLayer" parent="." unique_id=921685684]
+tile_map_data = PackedByteArray("AAABAA8ABAAAAAAAAAACAA8ABAAAAAAAAAADAA8ABAAAAAAAAAAEAA8ABAAAAAAAAAAFAA8ABAAAAAAAAAAGAA8ABAAAAAAAAAAHAA8ABAAAAAAAAAAIAA8ABAAAAAAAAAAJAA8ABAAAAAAAAAAKAA8ABAAAAAAAAAALAA8ABAAAAAAAAAAMAA8ABAAAAAAAAAANAA8ABAAAAAAAAAAOAA8ABAAAAAAAAAAPAA8ABAAAAAAAAAAQAA8ABAAAAAAAAAARAA8ABAAAAAAAAAASAA8ABAAAAAAAAAATAA8ABAAAAAAAAAAUAA8ABAAAAAAAAAAVAA8ABAAAAAAAAAAWAA8ABAAAAAAAAAAXAA8ABAAAAAAAAAAYAA8ABAAAAAAAAAAZAA8ABAAAAAAAAAAaAA8ABAAAAAAAAAAbAA8ABAAAAAAAAAAcAA8ABAAAAAAAAAAiAA8ABAAAAAAAAAAhAA8ABAAAAAAAAAAgAA8ABAAAAAAAAAAfAA8ABAAAAAAAAAAeAA8ABAAAAAAAAAAdAA8ABAAAAAAAAAAAAAkABAAAAAAAAAAAAAgABAAAAAAAAAAAAAcABAAAAAAAAAAAAAYABAAAAAAAAAABAAYABAAAAAAAAAABAAUABAAAAAAAAAABAAQABAAAAAAAAAABAAMABAAAAAAAAAABAAIABAAAAAAAAAABAAEABAAAAAAAAAACAAAABAAAAAAAAAADAAAABAAAAAAAAAAEAAAABAAAAAAAAAAFAAAABAAAAAAAAAAGAAAABAAAAAAAAAAHAAAABAAAAAAAAAAJAAAABAAAAAAAAAAKAAAABAAAAAAAAAALAAAABAAAAAAAAAAMAAAABAAAAAAAAAANAAAABAAAAAAAAAAOAAAABAAAAAAAAAAPAAAABAAAAAAAAAAQAAAABAAAAAAAAAARAAAABAAAAAAAAAASAAAABAAAAAAAAAATAAAABAAAAAAAAAAUAAAABAAAAAAAAAAVAAAABAAAAAAAAAAWAAAABAAAAAAAAAAXAAAABAAAAAAAAAAYAAAABAAAAAAAAAAZAAAABAAAAAAAAAAaAAAABAAAAAAAAAAbAAAABAAAAAAAAAAdAAAABAAAAAAAAAAeAAAABAAAAAAAAAAfAAAABAAAAAAAAAAgAAAABAAAAAAAAAAhAAAABAAAAAAAAAAiAAEABAAAAAAAAAAiAAIABAAAAAAAAAAiAAMABAAAAAAAAAAiAAQABAAAAAAAAAAjAAQABAAAAAAAAAAjAAUABAAAAAAAAAAjAAYABAAAAAAAAAAjAAcABAAAAAAAAAAjAAgABAAAAAAAAAAjAAkABAAAAAAAAAAiAAkABAAAAAAAAAAiAAoABAAAAAAAAAAiAAsABAAAAAAAAAAjAAsABAAAAAAAAAAjAAwABAAAAAAAAAAjAA0ABAAAAAAAAAAjAA4ABAAAAAAAAAABAA4ABAAAAAAAAAABAA0ABAAAAAAAAAABAAwABAAAAAAAAAABAAsABAAAAAAAAAABAAoABAAAAAAAAAAIAAEABAAAAAAAAAAIAAIABAAAAAAAAAAIAAMABAAAAAAAAAAIAAQABAAAAAAAAAAXAAEABAAAAAAAAAAXAAIABAAAAAAAAAAOAA4ABAAAAAAAAAAOAA0ABAAAAAAAAAASAAYABAAAAAAAAAATAAYABAAAAAAAAAAUAAYABAAAAAAAAAATAAcABAAAAAAAAAAIAAUABAAAAAAAAAAHAAoABAAAAAAAAAAIAAoABAAAAAAAAAAJAAoABAAAAAAAAAAIAAYABAAAAAAAAAAMAAEABAAAAAAAAAAMAAIABAAAAAAAAAAOAAEABAAAAAAAAAAOAAIABAAAAAAAAAAOAAMABAAAAAAAAAAOAAQABAAAAAAAAAAbAAEABAAAAAAAAAAdAAEABAAAAAAAAAAdAAIABAAAAAAAAAAbAAIABAAAAAAAAAAcAAMABAAAAAAAAAAcAAAABAAAAAAAAAA=")
+tile_set = SubResource("TileSet_jej6c")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=57927670]
+top_level = true
+material = SubResource("ShaderMaterial_jyhfs")
+offset_left = -14.0
+offset_top = -7.0
+offset_right = 589.0
+offset_bottom = 341.0
+
+[node name="Door" parent="." unique_id=604409692 instance=ExtResource("12_o4lnp")]
+position = Vector2(24, 150)
+target_scene = "uid://bewkhkslkgvmu"
+
+[node name="Door2" parent="." unique_id=995656347 instance=ExtResource("12_o4lnp")]
+position = Vector2(103, 230)
+target_scene = "-1"
+
+[node name="Door10" parent="." unique_id=994615136 instance=ExtResource("12_o4lnp")]
+position = Vector2(167, 230)
+target_scene = "-1"
+
+[node name="Door3" parent="." unique_id=1278062110 instance=ExtResource("12_o4lnp")]
+position = Vector2(232, 198)
+target_scene = "-1"
+
+[node name="Door4" parent="." unique_id=1662865830 instance=ExtResource("12_o4lnp")]
+position = Vector2(311, 86)
+target_scene = "-1"
+
+[node name="Door5" parent="." unique_id=1339154292 instance=ExtResource("12_o4lnp")]
+position = Vector2(422, 230)
+target_scene = "-1"
+
+[node name="Door6" parent="." unique_id=1341780782 instance=ExtResource("12_o4lnp")]
+position = Vector2(365, 230)
+target_scene = "-1"
+
+[node name="Door7" parent="." unique_id=233361703 instance=ExtResource("12_o4lnp")]
+position = Vector2(551, 230)
+target_scene = "-1"
+
+[node name="Door9" parent="." unique_id=569890670 instance=ExtResource("12_o4lnp")]
+position = Vector2(488, 230)
+target_scene = "-1"
+
+[node name="Door8" parent="." unique_id=1083888632 instance=ExtResource("12_o4lnp")]
+position = Vector2(307, 230)
+target_scene = "-1"
+
+[node name="Door11" parent="." unique_id=1686854752 instance=ExtResource("12_o4lnp")]
+position = Vector2(253, 230)
+target_scene = "-1"
+
+[node name="Door12" parent="." unique_id=1516224547 instance=ExtResource("12_o4lnp")]
+position = Vector2(43, 230)
+target_scene = "-1"
+
+[node name="Door13" parent="." unique_id=645303952 instance=ExtResource("12_o4lnp")]
+position = Vector2(136, 150)
+target_scene = "-1"
+
+[node name="Door14" parent="." unique_id=993677731 instance=ExtResource("12_o4lnp")]
+position = Vector2(456, 38)
+target_scene = "182"
+instant = true

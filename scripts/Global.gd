@@ -5,10 +5,11 @@ var max_blocks: int = 4
 
 # Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
-	&"blocks": false,
-	&"hydro": false,
-	&"eat": false,
-	&"reach": false,
+	&"blocks": true,
+	&"hydro": true,
+	&"eat": true,
+	&"reach": true,
+	&"zahori": true, # varita zahorí (la da la hermana): marca la puerta correcta del laberinto (DoorMaze)
 }
 
 # Altares cuyo puzzle ya se resolvió
