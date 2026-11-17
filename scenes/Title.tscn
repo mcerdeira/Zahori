@@ -1,0 +1,161 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/title.gd" id="1_title"]
+[ext_resource type="Shader" path="res://scenes/blur.gdshader" id="2_blur"]
+[ext_resource type="Script" path="res://scenes/title_vines.gd" id="3_vines"]
+[ext_resource type="Script" path="res://scenes/title_sparks.gd" id="4_sparks"]
+[ext_resource type="FontFile" uid="uid://cyy1mfwfjcwwk" path="res://fonts/PirataOne-Regular.ttf" id="5_font"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_blur"]
+shader = ExtResource("2_blur")
+shader_parameter/radius = 2.0
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(1, 0.72, 0.4, 0.13, 0.7, 0.45, 0.3, 0.04, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_glow"]
+gradient = SubResource("Gradient_glow")
+width = 128
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_vignette"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0.85)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
+gradient = SubResource("Gradient_vignette")
+width = 128
+height = 72
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1.05, 1.05)
+
+[node name="Title" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_title")
+
+[node name="bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.016, 0.02, 0.024, 1)
+
+[node name="back_view" type="TextureRect" parent="."]
+texture_filter = 2
+material = SubResource("ShaderMaterial_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="viewport" type="SubViewport" parent="back_view"]
+transparent_bg = true
+size = Vector2i(288, 162)
+render_target_update_mode = 4
+
+[node name="vines" type="Node2D" parent="back_view/viewport"]
+script = ExtResource("3_vines")
+max_plants = 7
+initial_plants = 4
+spawn_interval = Vector2(2, 5)
+grow_speed = 20.0
+length_range = Vector2(180, 360)
+base_width = 7.0
+leaf_size = Vector2(9, 18)
+leaf_spacing = 14.0
+bud_chance = 0.12
+stem_color = Color(0.09, 0.22, 0.17, 1)
+leaf_color = Color(0.11, 0.29, 0.2, 1)
+bud_color = Color(1, 0.72, 0.38, 0.8)
+sway = 2.0
+prewarm = 3.0
+
+[node name="glow" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 480.0
+offset_bottom = 220.0
+texture = SubResource("GradientTexture2D_glow")
+expand_mode = 1
+
+[node name="title" type="Label" parent="."]
+layout_mode = 0
+offset_right = 360.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 104
+text = "Zahori"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="front_vines" type="Node2D" parent="."]
+script = ExtResource("3_vines")
+max_plants = 3
+initial_plants = 2
+spawn_interval = Vector2(6, 12)
+grow_speed = 12.0
+length_range = Vector2(70, 150)
+base_width = 3.0
+leaf_size = Vector2(4, 8)
+leaf_spacing = 9.0
+branch_chance = 0.25
+stem_color = Color(0.008, 0.016, 0.014, 1)
+leaf_color = Color(0.012, 0.026, 0.02, 1)
+sway = 1.0
+hold_time = Vector2(25, 40)
+fade_time = 8.0
+edges = Array[int]([0, 0, 1, 2, 3])
+corners_only = true
+
+[node name="sparks" type="Node2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+script = ExtResource("4_sparks")
+
+[node name="vignette" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_vignette")
+expand_mode = 1
+
+[node name="ui" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="fade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)

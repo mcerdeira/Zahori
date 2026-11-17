@@ -1,10 +1,13 @@
 extends CanvasLayer
-## Pantalla de pausa con el estilo del monitor de las terminales: CONTINUE / QUIT.
+## Pantalla de pausa con el estilo del monitor de las terminales:
+## CONTINUE / SETTINGS / QUIT (QUIT vuelve al menú de título).
 ## UP/DOWN eligen, `action` o ENTER confirman; Q o ESC continúan.
 
 signal closed
 
-const OPTIONS: Array[String] = ["CONTINUE", "QUIT"]
+const OPTIONS: Array[String] = ["CONTINUE", "SETTINGS", "QUIT"]
+const SETTINGS_SCENE := preload("res://scenes/settings_menu.tscn")
+const TITLE_SCENE := "res://scenes/Title.tscn"
 const INK := Color(0.55, 0.88, 1, 1)
 
 @export var power_on_time: float = 0.25 # segundos de la animación de encendido
@@ -20,6 +23,7 @@ const INK := Color(0.55, 0.88, 1, 1)
 
 var _selected := 0
 var _closing := false
+var _settings: Node = null
 var _labels: Array[Label] = []
 var _highlight := StyleBoxFlat.new()
 
@@ -57,7 +61,7 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _closing:
+	if _closing or _settings:
 		return
 	if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel"):
 		_close()
@@ -69,9 +73,14 @@ func _input(event: InputEvent) -> void:
 		match OPTIONS[_selected]:
 			"CONTINUE":
 				_close()
+			"SETTINGS":
+				Sfx.play("term_ok")
+				_settings = SETTINGS_SCENE.instantiate()
+				_settings.closed.connect(func(): _settings = null)
+				add_child(_settings)
 			"QUIT":
 				Sfx.play("term_ok")
-				get_tree().quit()
+				_quit_to_title()
 	get_viewport().set_input_as_handled()
 
 
@@ -87,8 +96,14 @@ func _refresh() -> void:
 			l.remove_theme_color_override("font_color")
 
 
-## Apaga el monitor y despausa.
-func _close() -> void:
+## Apaga el monitor, despausa y vuelve al menú de título.
+func _quit_to_title() -> void:
+	Music.stop_main_theme(0.6)
+	_close(func(): get_tree().change_scene_to_file(TITLE_SCENE))
+
+
+## Apaga el monitor y despausa. `after` se llama al terminar (ya despausado).
+func _close(after := Callable()) -> void:
 	_closing = true
 	Sfx.play("term_off")
 	var tw := create_tween()
@@ -99,4 +114,6 @@ func _close() -> void:
 	tw.tween_callback(func():
 		get_tree().paused = false
 		closed.emit()
+		if after.is_valid():
+			after.call()
 		queue_free())

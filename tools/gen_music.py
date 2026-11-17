@@ -14,9 +14,15 @@ Si bemol (segundo grado frigio) chocando contra el La y un disminuido sin resolv
 El final se encadena con el principio (las colas se suman al comienzo), así el
 loop no tiene corte.
 
-Uso: python3 tools/gen_music.py   (necesita numpy y ffmpeg con libvorbis)
+También genera el tema del menú de título (music/title_theme.ogg): la misma
+armonía de lamento, pero más lenta y despojada (drone de triángulo, arpegio
+espaciado, latido lejano, viento de ruido y fragmentos de la melodía con mucho eco).
+
+Uso: python3 tools/gen_music.py [main|title|all]   (default: all)
+     (necesita numpy y ffmpeg con libvorbis)
 """
 import subprocess
+import sys
 import tempfile
 import wave
 from pathlib import Path
@@ -27,7 +33,9 @@ RATE = 44100
 BPM = 58
 BEAT = 60.0 / BPM
 BAR = BEAT * 4
-OUT = Path(__file__).resolve().parent.parent / "music" / "main_theme.ogg"
+MUSIC_DIR = Path(__file__).resolve().parent.parent / "music"
+OUT = MUSIC_DIR / "main_theme.ogg"
+OUT_TITLE = MUSIC_DIR / "title_theme.ogg"
 
 
 def hz(midi):
@@ -221,9 +229,92 @@ def render():
     return out * 0.8
 
 
-def main():
-    audio = render()
-    OUT.parent.mkdir(exist_ok=True)
+# --- Tema del título ------------------------------------------------------------
+
+TITLE_BPM = 46
+TITLE_BEAT = 60.0 / TITLE_BPM
+TITLE_BAR = TITLE_BEAT * 4
+TITLE_SONG = ["Am", "Am", "Am/G#", "Am/G", "F#m7b5", "Bb/F", "E", "E",
+              "Am", "Am", "Bb", "Bb", "Gm", "Bb", "E7b9", "E"]
+# Fragmentos de la melodía principal, una octava más arriba y muy espaciados
+TITLE_MELODY = {
+    1: [(0, 3, 88), (3, 1, 86)],
+    2: [(0, 4, 84)],
+    5: [(0, 2, 82), (2, 2, 86)],
+    6: [(0, 4, 80)],
+    9: [(0, 3, 88), (3, 1, 89)],
+    10: [(0, 4, 86)],
+    13: [(0, 2, 89), (2, 2, 86)],
+    14: [(0, 4, 80)],
+}
+
+
+def wind(dur, env):
+    """Viento: ruido grave suavizado con una media móvil (lo más parecido a un filtro
+    que tendría una consola) y con el volumen respirando."""
+    x = noise(dur, 2600, False, np.ones(int(RATE * dur)))
+    k = 60
+    x = np.convolve(x, np.ones(k) / k, mode="same")
+    return x * env
+
+
+def render_title():
+    total = len(TITLE_SONG) * TITLE_BAR
+    tail = 6.0
+    mix = np.zeros(int(RATE * (total + tail)) + RATE)
+
+    def put(x, start):
+        i = int(RATE * start)
+        mix[i:i + len(x)] += x
+
+    hb = heartbeat()
+    for b, name in enumerate(TITLE_SONG):
+        t0 = b * TITLE_BAR
+        root, arp = CH[name]
+
+        # Drone: el bajo una octava abajo, largo y suave, y su quinta muy bajita
+        put(triangle(root - 12, TITLE_BAR, decay_env(TITLE_BAR, 0.4, 0.2, 0.6, 0.3)) * 0.30, t0)
+        put(triangle(root - 5, TITLE_BAR, decay_env(TITLE_BAR, 0.8, 0.3, 0.4, 0.3)) * 0.10, t0)
+
+        # Arpegio en negras, sólo subiendo, con eco largo
+        q = TITLE_BEAT
+        for k, idx in enumerate([0, 2, 3, 1]):
+            x = pulse(arp[idx] + 12, q, 0.25, decay_env(q, 0.004, 4)) * 0.075
+            put(x, t0 + k * q)
+            put(x * 0.4, t0 + k * q + q * 1.5)
+            put(x * 0.15, t0 + k * q + q * 3.0)
+
+        # Latido lejano: uno por compás, en compases alternos
+        if b % 2 == 0:
+            put(hb * 0.45, t0)
+
+        # Viento que crece y se va cada dos compases
+        if b % 2 == 0:
+            d = TITLE_BAR * 2
+            tt = t(d)
+            env = steps(np.sin(np.pi * tt / d) ** 2) * 0.12
+            put(wind(d, env), t0)
+
+        for start, beats, m in TITLE_MELODY.get(b, []):
+            dur = beats * TITLE_BEAT
+            env = decay_env(dur, 0.08, 0.5, 0.3, 0.3)
+            x = pulse(m, dur, 0.125, env, vibrato=0.01) * 0.07
+            put(x, t0 + start * TITLE_BEAT)
+            put(x * 0.45, t0 + (start + 1.0) * TITLE_BEAT)
+            put(x * 0.2, t0 + (start + 2.0) * TITLE_BEAT)
+            put(x * 0.08, t0 + (start + 3.0) * TITLE_BEAT)
+
+    n = int(RATE * total)
+    rest = mix[n:]
+    out = mix[:n].copy()
+    out[:len(rest)] += rest
+    out -= np.mean(out)
+    out /= np.max(np.abs(out))
+    return out * 0.7
+
+
+def export(audio, out):
+    out.parent.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         wav_path = Path(tmp) / "theme.wav"
         with wave.open(str(wav_path), "wb") as w:
@@ -232,8 +323,16 @@ def main():
             w.setframerate(RATE)
             w.writeframes((audio * 32767).astype("<i2").tobytes())
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav_path),
-                        "-c:a", "libvorbis", "-q:a", "5", str(OUT)], check=True)
-    print(f"{OUT.relative_to(OUT.parent.parent)}  ({len(audio) / RATE:.1f} s)")
+                        "-c:a", "libvorbis", "-q:a", "5", str(out)], check=True)
+    print(f"{out.relative_to(out.parent.parent)}  ({len(audio) / RATE:.1f} s)")
+
+
+def main():
+    which = sys.argv[1] if len(sys.argv) > 1 else "all"
+    if which in ("main", "all"):
+        export(render(), OUT)
+    if which in ("title", "all"):
+        export(render_title(), OUT_TITLE)
 
 
 if __name__ == "__main__":

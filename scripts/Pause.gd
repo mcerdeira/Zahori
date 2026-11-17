@@ -11,7 +11,6 @@ const ROOMS_DIR := "res://scenes/rooms/"
 @export var volume_drop: float = 0.6
 
 var _menu: Node = null
-var _saved_master_db := 0.0
 
 
 func _ready() -> void:
@@ -29,15 +28,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _open() -> void:
-	var master := AudioServer.get_bus_index(&"Master")
-	_saved_master_db = AudioServer.get_bus_volume_db(master)
-	AudioServer.set_bus_volume_db(master,
-			linear_to_db(db_to_linear(_saved_master_db) * (1.0 - volume_drop)))
+	Settings.set_master_duck(1.0 - volume_drop)
 	_menu = MENU_SCENE.instantiate()
 	_menu.closed.connect(_on_closed)
 	add_child(_menu)
 
 
 func _on_closed() -> void:
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"Master"), _saved_master_db)
+	Settings.set_master_duck(1.0)
 	_menu = null
