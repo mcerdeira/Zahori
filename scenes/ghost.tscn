@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://bccoh0wtsf3dn"]
+
+[ext_resource type="Script" uid="uid://cyk3xugouiv0" path="res://scenes/ghost.gd" id="1_ghost"]
+[ext_resource type="Texture2D" uid="uid://d4gmyeopn86w3" path="res://sprites/ghost_spr_0.png" id="g0"]
+[ext_resource type="Texture2D" uid="uid://qc402vuo7uqr" path="res://sprites/ghost_spr_1.png" id="g1"]
+[ext_resource type="Texture2D" uid="uid://bjsu1r5dgb7f8" path="res://sprites/ghost_spr_2.png" id="g2"]
+[ext_resource type="Texture2D" uid="uid://r7k760j1wcyt" path="res://sprites/ghost_spr_3.png" id="g3"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ghost"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("g0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("g1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("g2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("g3")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(12, 13)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurt"]
+size = Vector2(8, 9)
+
+[node name="Ghost" type="CharacterBody2D" unique_id=2059391882]
+collision_layer = 2
+script = ExtResource("1_ghost")
+
+[node name="sprite" type="AnimatedSprite2D" parent="." unique_id=1237270476]
+sprite_frames = SubResource("SpriteFrames_ghost")
+autoplay = "default"
+frame_progress = 0.35864604
+speed_scale = 8.0
+
+[node name="collider" type="CollisionShape2D" parent="." unique_id=143387714]
+position = Vector2(0, 0.5)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="hurtbox" type="Area2D" parent="." unique_id=1548822205]
+collision_layer = 0
+monitorable = false
+
+[node name="collider" type="CollisionShape2D" parent="hurtbox" unique_id=714474546]
+shape = SubResource("RectangleShape2D_hurt")

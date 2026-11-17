@@ -6,9 +6,10 @@ var max_blocks: int = 4
 # Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
 	&"blocks": true,
-	&"hydro": true,
+	&"hydro": false,
 	&"eat": true,
 	&"reach": true,
+	&"teleport": true, # proyectil (altar 05): intercambia lugar con lo "interchangeable" que toca
 	&"zahori": true, # varita zahorí (la da la hermana): marca la puerta correcta del laberinto (DoorMaze)
 }
 
@@ -24,6 +25,13 @@ var last_door: Dictionary = {}
 
 # Se emite cada vez que una habilidad se prende o se apaga.
 signal ability_changed(id: StringName, enabled: bool)
+
+const WATER_EVAPORATION := preload("res://scenes/water_evaporation.gd")
+
+# false cuando el agua de la room está evaporada (hydro). Se pone en false recién
+# cuando la evaporación borra los tiles, no al activar hydro: los botes flotan
+# mientras el agua se vea.
+var water_active: bool = true
 
 # Meta que guarda, en cada TileMapLayer, las celdas de agua ocultas por hydro.
 const HIDDEN_WATER_META := &"hidden_water_cells"
@@ -59,6 +67,8 @@ func update_water_tiles() -> void:
 	if scene == null:
 		return
 	var hide := has_ability(&"hydro")
+	# Sin hydro el agua está; con hydro, si no hay evaporación en curso, ya no.
+	water_active = not hide
 	for layer in scene.find_children("*", "TileMapLayer", true, false):
 		if hide:
 			_hide_water_cells(layer)
@@ -81,9 +91,15 @@ func _hide_water_cells(layer: TileMapLayer) -> void:
 		var source := layer.get_cell_source_id(coords)
 		if source in water_sources:
 			cells.append([coords, source, layer.get_cell_atlas_coords(coords), layer.get_cell_alternative_tile(coords)])
-	for c in cells:
-		layer.erase_cell(c[0])
+	if cells.is_empty():
+		return
 	layer.set_meta(HIDDEN_WATER_META, cells)
+	# Los tiles no se borran acá: el efecto muestra el agua un momento y la
+	# evapora (borra las celdas al terminar la espera).
+	water_active = true # hasta que el efecto borre los tiles
+	var fx := WATER_EVAPORATION.new()
+	fx.setup(layer, cells)
+	layer.add_child(fx)
 
 func _restore_water_cells(layer: TileMapLayer) -> void:
 	if not layer.has_meta(HIDDEN_WATER_META):

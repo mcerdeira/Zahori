@@ -18,6 +18,10 @@ const SOUNDS := {
 	"term_ok": preload("res://sounds/term_ok.wav"),
 	"term_err": preload("res://sounds/term_err.wav"),
 	"dowse": preload("res://sounds/dowse.wav"),
+	"hiss": preload("res://sounds/hiss.wav"),
+	"shoot": preload("res://sounds/shoot.wav"),
+	"pop": preload("res://sounds/pop.wav"),
+	"teleport": preload("res://sounds/teleport.wav"),
 }
 
 ## Cantidad de sonidos que pueden sonar a la vez.

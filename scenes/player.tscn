@@ -17,8 +17,22 @@
 [ext_resource type="Texture2D" uid="uid://cl60soibcknd8" path="res://sprites/player_chomp_spr_1.png" id="chomp_1"]
 [ext_resource type="Texture2D" uid="uid://bndc7g1x0fy61" path="res://sprites/player_chomp_spr_2.png" id="chomp_2"]
 [ext_resource type="Texture2D" uid="uid://df1kn08mty337" path="res://sprites/player_chomp_spr_3.png" id="chomp_3"]
+[ext_resource type="Texture2D" path="res://sprites/player_shoot_spr_0.png" id="shoot_0"]
+[ext_resource type="Texture2D" path="res://sprites/player_shoot_spr_1.png" id="shoot_1"]
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_2l2dv"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("shoot_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("shoot_1")
+}],
+"loop": false,
+"name": &"shoot",
+"speed": 10.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("chomp_0")
