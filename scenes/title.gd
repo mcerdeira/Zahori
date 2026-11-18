@@ -44,6 +44,10 @@ var _intro_tween: Tween
 
 
 func _ready() -> void:
+	if Global.DEBUG:
+		Music.play_main_theme()
+		get_tree().change_scene_to_file.call_deferred(Global.DEBUG_START_SCENE)
+		return
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	var area := size
 	back_viewport.size = Vector2i((area / 2.0).ceil())

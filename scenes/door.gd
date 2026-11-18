@@ -13,6 +13,11 @@ extends Area2D
 ## Al aparecer en esta puerta, trae el bote de la room y lo pone debajo del
 ## player (para salir de una room navegando y seguir en la otra).
 @export var with_boat: bool = false
+## Con with_boat: si está activo, el bote aparece en boat_point (coordenadas de la
+## room, misma convención que la posición del nodo Boat) en vez de bajo el player.
+## Útil cuando el player vuelve a pie y el bote tiene que quedar en la costa.
+@export var use_boat_point: bool = false
+@export var boat_point: Vector2 = Vector2.ZERO # px, coordenadas de la room
 ## Al aparecer en esta puerta, para dónde mira el player ("-" = no cambiar).
 @export_enum("-", "L", "R") var facing: String = "-"
 

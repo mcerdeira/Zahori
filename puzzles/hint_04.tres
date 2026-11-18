@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AltarHint" format=3 uid="uid://kw85aec6g85s"]
+
+[ext_resource type="Script" uid="uid://oha27pqei3rs" path="res://scripts/altar_hint.gd" id="1_13hjd"]
+
+[resource]
+script = ExtResource("1_13hjd")
+text = "THIN AIR MEETS THE SKY,
+VALLEY ROADS SHRINK OUT OF SIGHT,
+WIND HUMS ON THE EDGE."
+puzzle = 4

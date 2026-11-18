@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AltarHint" format=3 uid="uid://bt1v1ejlpro8"]
+
+[ext_resource type="Script" uid="uid://oha27pqei3rs" path="res://scripts/altar_hint.gd" id="1_56inf"]
+
+[resource]
+script = ExtResource("1_56inf")
+text = "GREEN LEAVES TURN TO GOLD,
+SOFT WIND LIFTS THE FADING WEIGHT,
+NEW BUDS WAIT IN SLEEP."
+puzzle = 5

@@ -95,8 +95,10 @@ offset_bottom = 341.0
 
 [node name="Door" parent="." unique_id=604409692 instance=ExtResource("12_7ieqr")]
 position = Vector2(31, 150)
-target_scene = "99"
+target_scene = "uid://cnwcducwp6jec"
 with_boat = true
+use_boat_point = true
+boat_point = Vector2(129, 187)
 facing = "L"
 
 [node name="Door2" parent="." unique_id=993677731 instance=ExtResource("12_7ieqr")]

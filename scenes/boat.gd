@@ -12,6 +12,9 @@ extends CharacterBody2D
 @export var max_fall_speed: float = 240.0 # px/s
 @export var waterline: float = 5.0 # px desde el origen del bote hasta la línea de flotación
 @export var offscreen_time: float = 1.2 # s fuera de pantalla cayendo antes de borrarse
+@export var bob_amplitude: float = 1.0 # px que sube y baja flotando sola
+@export var bob_period: float = 1.8 # s de un ciclo completo del vaivén
+@export var bob_fade: float = 4.0 # 1/s, qué tan rápido entra/sale el vaivén
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var _dir := 0 # -1 / 1 mientras avanza, 0 frenado
@@ -19,6 +22,9 @@ var _vy := 0.0
 var _falling := false
 var _offscreen := 0.0
 var _notifier: VisibleOnScreenNotifier2D
+var _bob_t := 0.0 # s, fase del vaivén
+var _bob_weight := 0.0 # 0..1, cuánto vaivén se aplica (para que entre y salga suave)
+var _floating := false
 
 
 func _enter_tree() -> void:
@@ -34,10 +40,18 @@ func place_under(feet: Vector2) -> void:
 	_vy = 0.0
 
 
+## Pone el bote en pos (global) frenado, como si arrancara ahí la room.
+func place_at(pos: Vector2) -> void:
+	global_position = pos
+	_dir = 0
+	_vy = 0.0
+
+
 func _ready() -> void:
 	_notifier = VisibleOnScreenNotifier2D.new()
 	_notifier.rect = Rect2(-16, -8, 32, 16)
 	add_child(_notifier)
+	_bob_t = randf() * bob_period # que dos botes no se muevan sincronizados
 
 
 func is_moving() -> bool:
@@ -61,6 +75,7 @@ func launch(dir: int) -> bool:
 func _physics_process(delta: float) -> void:
 	var surface := _water_surface()
 	_falling = false
+	_floating = false
 	if not is_nan(surface):
 		# Flotando (o cayendo hacia el agua): se clava en la línea de flotación
 		var target := surface - waterline
@@ -70,6 +85,7 @@ func _physics_process(delta: float) -> void:
 			_falling = global_position.y < target
 		if not _falling:
 			_vy = 0.0
+			_floating = true
 	else:
 		_vy = minf(_vy + gravity * delta, max_fall_speed)
 		if _move(Vector2(0, _vy * delta)):
@@ -87,6 +103,28 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 	else:
 		_offscreen = 0.0
+
+
+func _process(delta: float) -> void:
+	_update_bob(delta)
+
+
+## Vaivén del agua: sólo visual (mueve el sprite, no el collider), y sólo flotando
+## quieta y sin nadie encima. Al subirse el player se apaga suave.
+func _update_bob(delta: float) -> void:
+	var active := _floating and _dir == 0 and not _has_rider()
+	_bob_weight = move_toward(_bob_weight, 1.0 if active else 0.0, bob_fade * delta)
+	_bob_t = fmod(_bob_t + delta, bob_period)
+	var y := sin(_bob_t / bob_period * TAU) * bob_amplitude * _bob_weight
+	$sprite.position.y = roundf(y) # px enteros, pixel art
+
+
+## true si algún player está parado sobre el bote.
+func _has_rider() -> bool:
+	for p in get_tree().get_nodes_in_group("player"):
+		if p.has_method("floor_boat") and p.floor_boat() == self:
+			return true
+	return false
 
 
 ## Superficie (y global) del agua sobre la que flota, o NAN si no hay.

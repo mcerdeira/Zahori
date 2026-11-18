@@ -1,5 +1,9 @@
 extends Node
 
+# Modo debug: arranca directo en DEBUG_START_SCENE salteando título e intros.
+const DEBUG: bool = true
+const DEBUG_START_SCENE := "res://scenes/rooms/level0.tscn"
+
 # Cantidad máxima de bloques
 var max_blocks: int = 4
 
@@ -7,10 +11,10 @@ var max_blocks: int = 4
 var abilities: Dictionary = {
 	&"blocks": true,
 	&"hydro": false,
-	&"eat": true,
-	&"reach": true,
-	&"teleport": true, # proyectil (altar 05): intercambia lugar con lo "interchangeable" que toca
-	&"zahori": true, # varita zahorí (la da la hermana): marca la puerta correcta del laberinto (DoorMaze)
+	&"eat": false,
+	&"reach": false,
+	&"teleport": true,
+	&"zahori": false,
 }
 
 # Altares cuyo puzzle ya se resolvió

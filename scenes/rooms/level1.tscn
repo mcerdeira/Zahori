@@ -8,6 +8,7 @@
 [ext_resource type="Shader" uid="uid://y53i2lhrg154" path="res://scenes/fx.gdshader" id="5_svwif"]
 [ext_resource type="PackedScene" uid="uid://8pofk8g1gd5i" path="res://scenes/door.tscn" id="6_w1c7e"]
 [ext_resource type="PackedScene" uid="uid://67aqh7o6lo5a" path="res://scenes/water.tscn" id="8_pum76"]
+[ext_resource type="PackedScene" path="res://scenes/plant.tscn" id="9_n4a3v"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jyhfs"]
 texture = ExtResource("3_pum76")
@@ -72,3 +73,6 @@ scale = Vector2(4, 1)
 [node name="Water2" parent="." unique_id=609040993 instance=ExtResource("8_pum76")]
 position = Vector2(240, 206)
 scale = Vector2(2, 1)
+
+[node name="Plant" parent="." unique_id=1579291573 instance=ExtResource("9_n4a3v")]
+position = Vector2(488, 168)

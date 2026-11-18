@@ -9,6 +9,9 @@ const PATH := "res://puzzles/hint_%02d.tres"
 
 ## Texto de la pista (en inglés; los saltos de línea se respetan).
 @export_multiline var text: String = ""
+## Número del altar de puzzle cuya palabra orienta (0 = ninguno). No lo usa el
+## juego: es para el machete del mapa (tools/gen_map.py).
+@export var puzzle: int = 0
 
 
 ## Pista que le corresponde al altar de pistas number, o null si no existe.

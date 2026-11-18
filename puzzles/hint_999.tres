@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="AltarHint" format=3 uid="uid://bsehmniouhqae"]
+
+[ext_resource type="Script" uid="uid://oha27pqei3rs" path="res://scripts/altar_hint.gd" id="1_1241x"]
+
+[resource]
+script = ExtResource("1_1241x")
+text = "ERROR: FILE NOT FOUND."

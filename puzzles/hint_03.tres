@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AltarHint" format=3 uid="uid://d0fdpf0n8b33v"]
+
+[ext_resource type="Script" uid="uid://oha27pqei3rs" path="res://scripts/altar_hint.gd" id="1_pmtf3"]
+
+[resource]
+script = ExtResource("1_pmtf3")
+text = "WARM BREAD IN MY HANDS,
+CRISP CRUST BREAKS AND STEAM RISES,
+HUNGER MELTS AWAY."
+puzzle = 3

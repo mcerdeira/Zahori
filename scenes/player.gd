@@ -74,10 +74,12 @@ func _apply_door_arrival(door: Node) -> void:
 		"R": sprite.flip_h = false
 	if door.with_boat:
 		var boat := get_tree().get_first_node_in_group("boat")
-		if boat:
-			boat.place_under(global_position + Vector2(0, _feet_offset()))
-		else:
+		if not boat:
 			push_warning("Puerta '%s' con with_boat pero la room no tiene bote" % door.name)
+		elif door.use_boat_point:
+			boat.place_at(door.boat_point)
+		else:
+			boat.place_under(global_position + Vector2(0, _feet_offset()))
 
 
 ## El agua no lo mata si tiene la habilidad hydro.
@@ -127,13 +129,19 @@ func set_silhouette(enabled: bool) -> void:
 ## y sin estar construyendo ni entrando por una puerta.
 func can_interact() -> bool:
 	return is_on_floor() and state != State.BUILDING and state != State.DOOR \
-			and not _riding_moving_boat()
+			and not _riding_moving_boat() and not _shot_alive()
+
+
+## true mientras el proyectil de teleport está vivo (incluida su animación de pop).
+## Mientras tanto el player queda quieto y no puede hacer nada.
+func _shot_alive() -> bool:
+	return is_instance_valid(_shot)
 
 
 ## La puerta lo llama al apretar UP. Devuelve false si ahora no se puede entrar.
 func enter_door(door_x: float) -> bool:
 	if state == State.BUILDING or state == State.DOOR or not is_on_floor() \
-			or _riding_moving_boat():
+			or _riding_moving_boat() or _shot_alive():
 		return false
 	state = State.DOOR
 	_door_x = door_x
@@ -154,9 +162,10 @@ func _physics_process(delta: float) -> void:
 	if not riding:
 		_update_ability(delta)
 
-	# Movimiento horizontal (bloqueado mientras se construye o se entra por una puerta)
+	# Movimiento horizontal (bloqueado mientras se construye, se entra por una puerta
+	# o hay un proyectil de teleport vivo)
 	var direction := 0.0
-	if state != State.BUILDING and state != State.DOOR and not riding:
+	if state != State.BUILDING and state != State.DOOR and not riding and not _shot_alive():
 		direction = Input.get_axis("LEFT", "RIGHT")
 	# Parado en un bote frenado: la dirección lanza el bote en vez de caminar
 	# (si no hay lugar para que avance, camina normal)
@@ -247,6 +256,11 @@ func _floor_boat() -> Node:
 	return null
 
 
+## Bote sobre el que está parado (o null). Lo usa el bote para frenar su vaivén.
+func floor_boat() -> Node:
+	return _boat if is_instance_valid(_boat) else null
+
+
 func _riding_moving_boat() -> bool:
 	return _boat != null and is_instance_valid(_boat) and _boat.is_moving()
 
@@ -278,7 +292,7 @@ func _update_ability(delta: float) -> void:
 	_shoot_anim -= delta
 	# Teleport: dispara parado en el piso si no hay otro proyectil vivo
 	if state == State.NORMAL and Input.is_action_just_pressed("shoot") and is_on_floor() \
-			and Global.has_ability(&"teleport") and not is_instance_valid(_shot):
+			and Global.has_ability(&"teleport") and not _shot_alive():
 		_fire_shot()
 	# Con eat también come las piedras que toca de costado (empujando contra ellas)
 	if state != State.DOOR and _chomp_timer <= 0.0 and Global.has_ability(&"eat"):
@@ -287,7 +301,7 @@ func _update_ability(delta: float) -> void:
 	match state:
 		State.NORMAL:
 			if Input.is_action_just_pressed("action") and is_on_floor() \
-					and Global.has_ability(&"blocks"):
+					and Global.has_ability(&"blocks") and not _shot_alive():
 				state = State.BUILDING
 				velocity.x = 0.0
 				_timer = 0.0 # el primer bloque sale al instante
