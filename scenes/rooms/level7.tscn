@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://67aqh7o6lo5a" path="res://scenes/water.tscn" id="13_gxckm"]
 [ext_resource type="PackedScene" uid="uid://bxu312q3urj6d" path="res://scenes/altar.tscn" id="14_d8inn"]
 [ext_resource type="PackedScene" path="res://scenes/plant.tscn" id="15_wlx6o"]
+[ext_resource type="PackedScene" uid="uid://5k3e0pgoibm2" path="res://scenes/killerobj.tscn" id="16_d7wov"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jyhfs"]
 texture = ExtResource("3_d8inn")
@@ -103,12 +104,12 @@ position = Vector2(553, 182)
 target_scene = "uid://osmuu1eucw62"
 
 [node name="Water" parent="." unique_id=719636805 instance=ExtResource("13_gxckm")]
-position = Vector2(324, 255)
-scale = Vector2(20, 1)
+position = Vector2(324.00003, 284.00003)
+scale = Vector2(20, 5)
 
 [node name="Water2" parent="." unique_id=1836799566 instance=ExtResource("13_gxckm")]
-position = Vector2(102, 239)
-scale = Vector2(8, 1)
+position = Vector2(102, 261)
+scale = Vector2(8, 4)
 
 [node name="Altar" parent="." unique_id=1042846352 instance=ExtResource("14_d8inn")]
 position = Vector2(24, 184)
@@ -125,3 +126,7 @@ position = Vector2(168, 216)
 
 [node name="Plant4" parent="." unique_id=1701371615 instance=ExtResource("15_wlx6o")]
 position = Vector2(39, 200)
+
+[node name="KillerObj" parent="." unique_id=1849206100 instance=ExtResource("16_d7wov")]
+position = Vector2(294, 331)
+scale = Vector2(45, 1)

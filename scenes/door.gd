@@ -20,6 +20,9 @@ extends Area2D
 @export var boat_point: Vector2 = Vector2.ZERO # px, coordenadas de la room
 ## Al aparecer en esta puerta, para dónde mira el player ("-" = no cambiar).
 @export_enum("-", "L", "R") var facing: String = "-"
+## Al aparecer en esta puerta, borra las enredaderas de la room (grupo `vines`):
+## p. ej. para que no persiga al player si entra por el otro lado.
+@export var kill_vine: bool = false
 
 @export_group("Glow (instant)")
 ## Las instant emiten una luz que parpadea con los colores de la puerta normal.

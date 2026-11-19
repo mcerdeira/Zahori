@@ -117,3 +117,7 @@ position = Vector2(280, 174)
 position = Vector2(87, 296)
 kind = 1
 altar_number = 4
+
+[node name="Door4" parent="." unique_id=156966732 instance=ExtResource("12_st40j")]
+position = Vector2(200, 22)
+target_scene = "uid://cpsy4rne5r7o8"

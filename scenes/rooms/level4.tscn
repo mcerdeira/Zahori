@@ -72,8 +72,8 @@ position = Vector2(280, 230)
 target_scene = "uid://ds46c2po6nctq"
 
 [node name="Water" parent="." unique_id=719636805 instance=ExtResource("8_fqx8k")]
-position = Vector2(464, 270)
-scale = Vector2(12, 1)
+position = Vector2(464, 284)
+scale = Vector2(12, 3)
 
 [node name="Altar" parent="." unique_id=1042846352 instance=ExtResource("9_lhjcq")]
 position = Vector2(215, 168)

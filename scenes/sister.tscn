@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/sister.gd" id="1_sister"]
+[ext_resource type="Texture2D" path="res://sprites/sister_spr_0.png" id="2_tex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_trigger"]
+size = Vector2(12, 24)
+
+[node name="Sister" type="Node2D"]
+script = ExtResource("1_sister")
+
+[node name="sprite" type="Sprite2D" parent="."]
+z_index = -1
+texture = ExtResource("2_tex")
+
+[node name="trigger" type="Area2D" parent="."]
+collision_layer = 0
+monitorable = false
+
+[node name="collider" type="CollisionShape2D" parent="trigger"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_trigger")

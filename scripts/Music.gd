@@ -16,6 +16,7 @@ const LEVEL_RE := "level(\\d+)[a-z]?\\.tscn$"
 @export var volume_db: float = -8.0
 @export var fade_out_time: float = 2.5 # segundos del fade al entrar a la parte final
 @export var fade_in_time: float = 1.5  # segundos del fade al reanudar
+@export var suspend_fade_time: float = 0.4 # segundos del fade al pausarla por un enemigo (enredadera)
 ## Volumen del tema del título (dB). Más bajo que el principal: es un fondo sutil.
 @export var title_volume_db: float = -15.0
 @export var title_fade_in_time: float = 3.0 # segundos del fade de entrada del título
@@ -64,6 +65,14 @@ func _fade_in() -> void:
 		return
 	_player.stream_paused = false
 	_start_fade(volume_db, fade_in_time)
+
+
+## Pausa el tema en la room actual (la enredadera al despertar). Se reanuda solo
+## al pasar a otra room, como al volver de la parte final.
+func suspend() -> void:
+	if _player == null or _player.stream_paused:
+		return
+	_start_fade(-80.0, suspend_fade_time).tween_callback(func(): _player.stream_paused = true)
 
 
 func _start_fade(to_db: float, time: float) -> Tween:

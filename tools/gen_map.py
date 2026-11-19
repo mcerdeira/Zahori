@@ -11,7 +11,8 @@ en miniatura; si no hay (Godot falló o se pasó --no-capture), como un cuadro a
 
 A la izquierda dibuja un machete con la palabra de cada altar de puzzle (puzzles/altar_XX.tres) y,
 para cada pista (puzzles/hint_XX.tres), la palabra del puzzle al que apunta (su campo `puzzle`) o,
-si no tiene, la primera línea del texto.
+si no tiene, la primera línea del texto. Un * rojo al lado de la etiqueta marca los altares que no
+están ubicados en ninguna room o que están en más de una (contando también las del laberinto).
 
 Uso: python3 tools/gen_map.py [--no-capture] [salida.png]   (por defecto tools/map.png)
      GODOT=/ruta/al/binario si `godot` no está en el PATH.
@@ -52,6 +53,7 @@ COL_LABEL_BG = (240, 240, 240)
 COL_SIDE_BG = (26, 24, 33)
 COL_HEADER = (255, 200, 107)
 COL_NO_PUZZLE = (150, 150, 160)  # pistas que no apuntan a ningún puzzle
+COL_WARN = (255, 70, 70)  # el * de altares sin ubicar o repetidos
 # Un color por altar de puzzle (P1, P2, ...); las pistas toman el del puzzle al que apuntan.
 # Sin amarillo, que es el de las rooms sin escena.
 PUZZLE_COLORS = [
@@ -284,6 +286,15 @@ def load_altar_data():
     return puzzles, hints
 
 
+def count_placed_altars():
+    """Cuántas veces aparece cada altar (kind, número) en todas las rooms, incluidas las del laberinto."""
+    counts = {}
+    for f in ROOMS_DIR.glob("level*.tscn"):
+        for altar in parse_scene(f)[2]:
+            counts[altar] = counts.get(altar, 0) + 1
+    return counts
+
+
 def puzzle_color(n):
     return PUZZLE_COLORS[(n - 1) % len(PUZZLE_COLORS)]
 
@@ -322,6 +333,7 @@ def main():
         sys.exit("no encontré rooms en scenes/rooms/")
     pos, w, h = layout(rooms, edges)
     puzzles, hints = load_altar_data()
+    placed = count_placed_altars()
 
     legend = "HN: hint N (color del puzzle al que apunta)  PN: puzzle N  amarillo: sin escena  azul: sin captura  borde verde: inicio  flecha: puerta de ida"
     w = max(w, MARGIN * 2 + len(legend) * 8)  # que entre la leyenda (8 px por caracter)
@@ -388,7 +400,7 @@ def main():
             max_chars = (SIDE_W - 72) // 8
             text = first if len(first) <= max_chars else first[: max_chars - 2] + ".."
         sheet.append((text, (1, n)))
-    full = Image.new("RGB", (w + SIDE_W, max(h, MARGIN * 2 + len(sheet) * SIDE_LINE)), COL_BG)
+    full = Image.new("RGB", (w + SIDE_W, max(h, MARGIN * 2 + (len(sheet) + 2) * SIDE_LINE)), COL_BG)
     full.paste(img, (SIDE_W, 0))
     ds = ImageDraw.Draw(full)
     ds.rectangle([0, 0, SIDE_W - 16, full.height], fill=COL_SIDE_BG)
@@ -398,8 +410,11 @@ def main():
             ds.text((16, ty), text, font=font_small, fill=COL_HEADER)
             continue
         draw_chip(ds, (19, ty), chip[0], chip[1], hints, font_small)
+        if placed.get(chip, 0) != 1:  # sin ubicar o repetido
+            ds.text((52, ty), "*", font=font_small, fill=COL_WARN)
         col = altar_color(chip[0], chip[1], hints)
         ds.text((64, ty), text.upper(), font=font_small, fill=col)
+    ds.text((16, MARGIN + (len(sheet) + 1) * SIDE_LINE), "* SIN UBICAR/REPETIDO", font=font_small, fill=COL_WARN)
     img = full
 
     img.save(out)

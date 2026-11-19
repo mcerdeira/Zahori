@@ -106,7 +106,7 @@ direction = 1
 speed = 110.0
 
 [node name="Ghost2" parent="." unique_id=1668877830 instance=ExtResource("13_d7aio")]
-position = Vector2(345, 263)
+position = Vector2(345, 264)
 speed = 110.0
 
 [node name="Ghost10" parent="." unique_id=664087877 instance=ExtResource("13_d7aio")]
@@ -114,7 +114,7 @@ position = Vector2(417, 246)
 speed = 110.0
 
 [node name="Ghost8" parent="." unique_id=1159221720 instance=ExtResource("13_d7aio")]
-position = Vector2(304, 230)
+position = Vector2(304, 232)
 speed = 110.0
 
 [node name="Ghost3" parent="." unique_id=1366165079 instance=ExtResource("13_d7aio")]
@@ -123,19 +123,19 @@ direction = 1
 speed = 110.0
 
 [node name="Ghost9" parent="." unique_id=1329916859 instance=ExtResource("13_d7aio")]
-position = Vector2(504, 296)
+position = Vector2(504, 39)
 direction = 1
-speed = 110.0
+speed = 180.0
 
 [node name="Ghost4" parent="." unique_id=891679899 instance=ExtResource("13_d7aio")]
-position = Vector2(120, 102)
+position = Vector2(120, 23)
 direction = 1
-speed = 110.0
+speed = 180.0
 
 [node name="Ghost7" parent="." unique_id=1982125153 instance=ExtResource("13_d7aio")]
-position = Vector2(152, 54)
+position = Vector2(152, 23)
 direction = 1
-speed = 110.0
+speed = 180.0
 
 [node name="Ghost5" parent="." unique_id=1882287002 instance=ExtResource("13_d7aio")]
 position = Vector2(104, 150)

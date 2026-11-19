@@ -72,6 +72,8 @@ func _apply_door_arrival(door: Node) -> void:
 	match door.facing:
 		"L": sprite.flip_h = true
 		"R": sprite.flip_h = false
+	if door.kill_vine:
+		get_tree().call_group("vines", "queue_free")
 	if door.with_boat:
 		var boat := get_tree().get_first_node_in_group("boat")
 		if not boat:
@@ -107,6 +109,8 @@ func die() -> void:
 	velocity = Vector2.ZERO
 	global_position = _respawn_position
 	_grace = respawn_grace
+	# Los enemigos que se reinician con cada muerte (la enredadera)
+	get_tree().call_group("player_death_listeners", "on_player_died")
 	# Que una puerta instantánea en el punto de respawn no lo mande de vuelta
 	get_tree().call_group("doors", "rearm")
 

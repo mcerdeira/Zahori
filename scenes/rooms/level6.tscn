@@ -79,8 +79,8 @@ position = Vector2(232, 150)
 target_scene = "uid://dwjt260y7k7mu"
 
 [node name="Water" parent="." unique_id=719636805 instance=ExtResource("8_4c2d3")]
-position = Vector2(288.00003, 204)
-scale = Vector2(48, 1)
+position = Vector2(288, 261)
+scale = Vector2(48, 8)
 
 [node name="KillerObj" parent="." unique_id=626013964 instance=ExtResource("9_8a1vv")]
 position = Vector2(286, 332)

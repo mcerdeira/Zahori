@@ -99,7 +99,7 @@ target_scene = "uid://n2yxbr75om0k"
 
 [node name="Door2" parent="." unique_id=993677731 instance=ExtResource("12_vviro")]
 position = Vector2(552, 134)
-target_scene = "12"
+target_scene = "uid://cmwtxjjurw57c"
 
 [node name="KillerObj" parent="." unique_id=719636805 instance=ExtResource("13_0a1ny")]
 position = Vector2(282, 333)

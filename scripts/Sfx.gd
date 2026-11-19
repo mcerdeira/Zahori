@@ -22,6 +22,9 @@ const SOUNDS := {
 	"shoot": preload("res://sounds/shoot.wav"),
 	"pop": preload("res://sounds/pop.wav"),
 	"teleport": preload("res://sounds/teleport.wav"),
+	"vine_scream": preload("res://sounds/vine_scream.wav"),
+	"vine_creep": preload("res://sounds/vine_creep.wav"),
+	"vine_eat": preload("res://sounds/vine_eat.wav"),
 }
 
 ## Cantidad de sonidos que pueden sonar a la vez.

@@ -191,3 +191,41 @@ x = t(d)
 shape = np.minimum(x / 0.25, 1.0) * np.clip((d - x) / 0.9, 0.0, 1.0) ** 1.5
 wobble = 0.8 + 0.2 * np.sin(2 * np.pi * 7 * x)  # leve burbujeo
 save("hiss", hiss * shape * wobble, 0.18)
+
+# Enredadera enemiga. Usa su propio rng para no alterar el ruido de los demás sonidos.
+vine_rng = np.random.default_rng(47)
+
+
+def vine_noise(dur, step=1):
+    n = int(RATE * dur)
+    return np.repeat(vine_rng.uniform(-1, 1, n // step + 1), step)[:n]
+
+
+# Despertar de la enredadera: rugido grave disonante con trémolo, un chillido que cae
+# con vibrato nervioso y un raspado de ruido. Suena una vez cuando arranca a perseguir.
+d = 1.8
+x = t(d)
+growl_env = np.minimum(x / 0.15, 1.0) * np.clip((d - x) / 1.0, 0.0, 1.0) ** 1.3
+tremolo = 0.6 + 0.4 * np.sign(np.sin(2 * np.pi * 11 * x))
+growl = (square(sweep(62, 41, d), d, 0.5) + square(sweep(66, 43.5, d), d, 0.25)) * tremolo * growl_env
+screech_f = sweep(1900, 330, d) * (1 + 0.035 * np.sin(2 * np.pi * 23 * x))
+screech = (square(screech_f, d, 0.125) + square(screech_f * 1.06, d, 0.125)) \
+    * np.minimum(x / 0.05, 1.0) * np.clip((d - x) / d, 0.0, 1.0) ** 2.2
+rasp = lowpass(vine_noise(d, 3), 0.35) * growl_env * (0.5 + 0.5 * np.sin(2 * np.pi * 7 * x) ** 2)
+save("vine_scream", growl * 0.55 + screech * 0.3 + rasp * 0.5, 0.6)
+
+# Crecimiento: crujido corto de ramas (suena cada tantas celdas que avanza)
+d = 0.07
+crack = vine_noise(d, 2)
+save("vine_creep", (crack - lowpass(crack, 0.5)) * env(d, attack=0.001, curve=5) * 0.7
+     + square(sweep(120, 70, d), d, 0.25) * env(d, attack=0.001, curve=4) * 0.5, 0.3)
+
+# Se come un bloque verde: masticado grave y áspero, tres mordidas que se arrastran
+bites = []
+for f in (150, 120, 95):
+    d = 0.1
+    grit = vine_noise(d, 4)
+    bites.append(lowpass(grit, 0.45) * env(d, attack=0.002, curve=2.5)
+                 + square(sweep(f, f * 0.6, d), d, 0.5) * env(d, attack=0.002, curve=3) * 0.7)
+    bites.append(np.zeros(int(RATE * 0.03)))
+save("vine_eat", concat(*bites), 0.5)

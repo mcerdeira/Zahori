@@ -98,12 +98,12 @@ position = Vector2(244, 214)
 target_scene = "uid://osmuu1eucw62"
 
 [node name="Water" parent="." unique_id=719636805 instance=ExtResource("13_ioffh")]
-position = Vector2(120, 208)
-scale = Vector2(5, 1)
+position = Vector2(120, 238.00002)
+scale = Vector2(5, 5)
 
 [node name="Water2" parent="." unique_id=1909886923 instance=ExtResource("13_ioffh")]
-position = Vector2(384.00003, 208)
-scale = Vector2(8, 1)
+position = Vector2(383.00003, 222)
+scale = Vector2(8, 3)
 
 [node name="Altar" parent="." unique_id=1042846352 instance=ExtResource("14_ii6sg")]
 position = Vector2(375, 232)

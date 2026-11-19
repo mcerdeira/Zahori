@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://cd3paucexf4vp"]
+
+[ext_resource type="Script" uid="uid://c5x3tsp4cq1yh" path="res://scenes/vine.gd" id="1_vine"]
+[ext_resource type="Texture2D" uid="uid://cifrkgd3efjrf" path="res://sprites/vine_root_spr_0.png" id="2_root"]
+[ext_resource type="Texture2D" uid="uid://dgq8u6f5qs03o" path="res://sprites/vine_head_spr_0.png" id="h0"]
+[ext_resource type="Texture2D" uid="uid://7wsb5wij5hg2" path="res://sprites/vine_head_spr_1.png" id="h1"]
+[ext_resource type="Texture2D" uid="uid://xbttbp3ygf6f" path="res://sprites/vine_head_spr_2.png" id="h2"]
+[ext_resource type="Texture2D" uid="uid://b3bm1k4to6ci1" path="res://sprites/vine_head_spr_3.png" id="h3"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_head"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("h0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("h1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("h2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("h3")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 8.0
+}]
+
+[node name="Vine" type="Node2D" unique_id=1010799763]
+script = ExtResource("1_vine")
+
+[node name="root" type="Sprite2D" parent="." unique_id=1549516677]
+z_index = 1
+texture = ExtResource("2_root")
+
+[node name="head" type="AnimatedSprite2D" parent="." unique_id=1863620220]
+visible = false
+z_index = 2
+sprite_frames = SubResource("SpriteFrames_head")
+autoplay = "default"

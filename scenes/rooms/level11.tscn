@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://8pofk8g1gd5i" path="res://scenes/door.tscn" id="12_7ieqr"]
 [ext_resource type="PackedScene" path="res://scenes/boat.tscn" id="13_mfx5u"]
 [ext_resource type="PackedScene" uid="uid://67aqh7o6lo5a" path="res://scenes/water.tscn" id="14_aqoho"]
+[ext_resource type="PackedScene" uid="uid://5k3e0pgoibm2" path="res://scenes/killerobj.tscn" id="15_aqoho"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jyhfs"]
 texture = ExtResource("3_mfx5u")
@@ -114,5 +115,9 @@ glow_enabled = false
 position = Vector2(561, 187)
 
 [node name="Water" parent="." unique_id=719636805 instance=ExtResource("14_aqoho")]
-position = Vector2(440.00006, 202)
+position = Vector2(440.0001, 238)
+scale = Vector2(45, 5)
+
+[node name="KillerObj" parent="." unique_id=722076634 instance=ExtResource("15_aqoho")]
+position = Vector2(294, 333)
 scale = Vector2(45, 1)
