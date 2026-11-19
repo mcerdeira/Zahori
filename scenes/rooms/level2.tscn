@@ -81,7 +81,6 @@ target_scene = "uid://bgjjes3kf1y4q"
 
 [node name="Altar" parent="." unique_id=1642946467 instance=ExtResource("9_1aosk")]
 position = Vector2(504, 72)
-kind = 1
 altar_number = 2
 
 [node name="Door5" parent="." unique_id=658294955 instance=ExtResource("7_fbhok")]

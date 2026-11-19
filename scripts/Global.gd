@@ -1,7 +1,7 @@
 extends Node
 
 # Modo debug: arranca directo en DEBUG_START_SCENE salteando título e intros.
-const DEBUG: bool = true
+const DEBUG: bool = false
 const DEBUG_START_SCENE := "res://scenes/rooms/level0.tscn"
 
 # Cantidad máxima de bloques
@@ -9,11 +9,11 @@ var max_blocks: int = 4
 
 # Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
-	&"blocks": true,
+	&"blocks": false,
 	&"hydro": false,
 	&"eat": false,
 	&"reach": false,
-	&"teleport": true,
+	&"teleport": false,
 	&"zahori": false,
 }
 
