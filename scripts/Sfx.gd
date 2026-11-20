@@ -25,6 +25,7 @@ const SOUNDS := {
 	"vine_scream": preload("res://sounds/vine_scream.wav"),
 	"vine_creep": preload("res://sounds/vine_creep.wav"),
 	"vine_eat": preload("res://sounds/vine_eat.wav"),
+	"item_get": preload("res://sounds/item_get.wav"),
 }
 
 ## Cantidad de sonidos que pueden sonar a la vez.

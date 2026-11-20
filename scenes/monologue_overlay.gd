@@ -6,6 +6,9 @@ extends "res://scripts/monologue.gd"
 
 @export var dim_alpha: float = 0.88 # opacidad del fondo negro (0..1)
 @export var dim_time: float = 0.8   # segundos del fundido de entrada y de salida
+## true: al terminar no aclara el fondo (queda oscuro hasta borrarse), para que
+## lo que sigue arranque desde la pantalla oscura (p. ej. el "objeto obtenido").
+@export var keep_dark_on_finish: bool = false
 
 @onready var _bg: ColorRect = $bg
 
@@ -24,7 +27,8 @@ func _ready() -> void:
 func _finish() -> void:
 	var tw := create_tween()
 	tw.tween_property(label, "modulate:a", 0.0, fade_time)
-	tw.tween_property(_bg, "modulate:a", 0.0, dim_time)
+	if not keep_dark_on_finish:
+		tw.tween_property(_bg, "modulate:a", 0.0, dim_time)
 	await tw.finished
 	get_tree().paused = false
 	finished.emit()

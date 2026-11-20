@@ -17,6 +17,10 @@ var abilities: Dictionary = {
 	&"zahori": false,
 }
 
+# true entre la muerte del player y la recarga de la room: el player nuevo
+# arranca con unos instantes de invulnerabilidad (player.respawn_grace).
+var respawn_grace_pending: bool = false
+
 # Altares cuyo puzzle ya se resolvió
 var solved_altars: Dictionary = {}
 

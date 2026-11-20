@@ -229,3 +229,20 @@ for f in (150, 120, 95):
                  + square(sweep(f, f * 0.6, d), d, 0.5) * env(d, attack=0.002, curve=3) * 0.7)
     bites.append(np.zeros(int(RATE * 0.03)))
 save("vine_eat", concat(*bites), 0.5)
+
+# Objeto obtenido (p. ej. la vara zahorí de la hermana): oscuro, no festivo. Dos golpes
+# graves que bajan medio tono (la -> sol#) y un acorde disminuido (re, fa, sol#: el
+# tritono) sobre un re grave, con trémolo lento y un leve desafinado que lo hace inquietante.
+# Sin ruido: no toca el rng.
+def dark_hit(f, d):
+    return (triangle(f / 2, d) * 0.7 + square(f, d, 0.125) * 0.35) * env(d, attack=0.004, curve=2.5)
+
+
+hits = concat(dark_hit(220.0, 0.22), dark_hit(207.65, 0.26))
+d = 1.2
+x = t(d)
+trem = 0.7 + 0.3 * np.sin(2 * np.pi * 4.5 * x)
+chord = (square(146.83, d, 0.125) * 0.3 + square(174.61 * 1.004, d, 0.125) * 0.25
+         + square(207.65 * 0.997, d, 0.25) * 0.2 + triangle(73.42, d) * 0.75) \
+    * trem * env(d, attack=0.03, curve=1.8)
+save("item_get", concat(hits, chord), 0.5)

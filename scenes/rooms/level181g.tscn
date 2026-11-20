@@ -97,5 +97,5 @@ target_scene = "uid://bewkhkslkgvmu"
 
 [node name="Door14" parent="." unique_id=993677731 instance=ExtResource("12_3xbea")]
 position = Vector2(456, 38)
-target_scene = "uid://bnc70417e4goo"
+target_scene = "uid://jxmyaioffy7y"
 instant = true

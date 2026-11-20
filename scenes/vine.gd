@@ -12,8 +12,8 @@ extends Node2D
 ## `eat_time` cada uno): construir una torre sirve para ganar tiempo.
 ##
 ## Mata al player si la cabeza lo toca. Al despertar pausa la música (se reanuda
-## sola al cambiar de room, ver Music) y cuando el player muere vuelve a empezar
-## desde la raíz (grupo `player_death_listeners`, lo llama player.die()).
+## sola al cambiar de room, ver Music). Cuando el player muere la room se recarga,
+## así que vuelve a empezar desde la raíz.
 
 const TILE := 16
 ## Direcciones; el índice por 90° es la rotación de los sprites (0 = derecha).
@@ -57,7 +57,6 @@ var _dims := Vector2i.ZERO # celdas de la grilla (la room más lo que haga falta
 
 
 func _enter_tree() -> void:
-	add_to_group("player_death_listeners")
 	add_to_group("vines") # las puertas con kill_vine la borran al aparecer en ellas
 
 
@@ -69,11 +68,6 @@ func _ready() -> void:
 	_origin = Vector2i(mini(0, _root_cell.x - 1), mini(0, _root_cell.y - 1))
 	var far := Vector2i(maxi(grid_size.x, _root_cell.x + 2), maxi(grid_size.y, _root_cell.y + 2))
 	_dims = far - _origin
-	_reset()
-
-
-## Lo llama player.die(): la enredadera vuelve a la raíz y despierta de nuevo.
-func on_player_died() -> void:
 	_reset()
 
 
@@ -117,10 +111,23 @@ func _physics_process(delta: float) -> void:
 
 
 func _wake() -> void:
+	# Grita sólo la primera en despertar: con varias en la room se superponían
+	var first := not get_tree().get_nodes_in_group("vines").any(
+			func(v): return v != self and v._awake)
 	_awake = true
 	_timer = 0.0
-	Sfx.play("vine_scream")
+	if first:
+		Sfx.play("vine_scream")
 	Music.suspend()
+
+
+## true si esta enredadera es la que suena en la room: la primera despierta (en
+## orden del árbol). Las demás crecen en silencio para no encimar los sonidos.
+func _is_voice() -> bool:
+	for v in get_tree().get_nodes_in_group("vines"):
+		if v._awake:
+			return v == self
+	return false
 
 
 ## Avanza la cabeza una celda por el camino que le marca el A*.
@@ -140,9 +147,10 @@ func _grow() -> void:
 		_eating.remove_from_group("blocks") # que nadie más lo cuente
 		_timer = eat_time
 		_head.speed_scale = 3.0 # mastica rápido
-		Sfx.play("vine_eat", randf_range(0.9, 1.05))
+		if _is_voice():
+			Sfx.play("vine_eat", randf_range(0.9, 1.05))
 	_steps += 1
-	if _steps % creep_sound_every == 0:
+	if _steps % creep_sound_every == 0 and _is_voice():
 		Sfx.play("vine_creep", randf_range(0.8, 1.2), -4.0)
 
 

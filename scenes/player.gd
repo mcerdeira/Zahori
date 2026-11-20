@@ -23,9 +23,14 @@ const EDIBLE_TEXTURE := "res://sprites/block_stone_spr_0.png"
 @export var land_min_speed: float = 80.0  # px/s de caída mínima para que suene el aterrizaje
 @export var chomp_interval: float = 0.1   # segundos mínimos entre un bloque comido y el siguiente
 @export var respawn_grace: float = 0.6 # s invulnerable (parpadeando) después de reaparecer
+@export var death_reload_delay: float = 0.6 # s entre la explosión y la recarga de la room
 @export var shot_offset: Vector2 = Vector2(8, 1) # px desde el centro hasta la mano (mirando a la derecha)
+@export var item_show_time: float = 2.5 # s que muestra un objeto obtenido sobre la cabeza
+@export var item_offset: Vector2 = Vector2(0, -12) # px desde el centro hasta el objeto mostrado
+@export var item_fps: float = 4.0 # frames/s de la animación del objeto mostrado
+@export var item_dark_time: float = 0.3 # s del fundido a negro (y de vuelta) al mostrar un objeto
 
-enum State { NORMAL, BUILDING, VANISHING, DOOR }
+enum State { NORMAL, BUILDING, VANISHING, DOOR, DEAD, ITEM }
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var state := State.NORMAL
@@ -33,7 +38,6 @@ var blocks: Array[Node] = []
 var _vanishing: Array[Node] = [] # bloques en pleno fade (todavía sólidos)
 var _timer := 0.0
 var _door_x := 0.0
-var _respawn_position := Vector2.ZERO
 var _doors_touching := 0 # puertas superpuestas ahora (para la silueta)
 var _step_timer := 0.0
 ## Bote sobre el que está parado (o null). Con el bote en movimiento el player
@@ -64,7 +68,10 @@ func _ready() -> void:
 	if door:
 		global_position = door.spawn_position(_feet_offset())
 		_apply_door_arrival(door)
-	_respawn_position = global_position
+	# Recién reaparecido tras morir: invulnerable un momento
+	if Global.respawn_grace_pending:
+		Global.respawn_grace_pending = false
+		_grace = respawn_grace
 
 
 ## Opciones de la puerta por la que aparece: orientación y bote.
@@ -89,30 +96,30 @@ func resists_water() -> bool:
 	return Global.has_ability(&"hydro")
 
 
-## Muerte instantánea: explota y reaparece en la puerta por la que entró
-## (o en su posición inicial si todavía no cruzó ninguna puerta).
+## Muerte instantánea: explota y, al rato, recarga la room. Reaparece en la
+## puerta por la que entró (o en su posición inicial si no vino por una puerta)
+## con la room como al entrar: bote, plantas, enemigos y piedras comidas vuelven
+## a su lugar, así una muerte nunca deja la room en un estado sin salida.
 func die() -> void:
-	if state == State.DOOR or _grace > 0.0:
-		return # ya se está yendo por una puerta, o recién reapareció
+	if state == State.DOOR or state == State.DEAD or _grace > 0.0:
+		return # ya se está yendo por una puerta, ya murió, o recién reapareció
+	state = State.DEAD
 	Sfx.play("die")
 	var fx := EXPLOSION_SCENE.instantiate()
 	fx.global_position = global_position
 	get_parent().add_child(fx)
-
+	sprite.visible = false
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+	collider.set_deferred("disabled", true)
 	for block in blocks:
 		if is_instance_valid(block):
 			block.queue_free()
 	blocks.clear()
 	_vanishing.clear()
-	state = State.NORMAL
-	_chomp_anim = 0.0
-	velocity = Vector2.ZERO
-	global_position = _respawn_position
-	_grace = respawn_grace
-	# Los enemigos que se reinician con cada muerte (la enredadera)
-	get_tree().call_group("player_death_listeners", "on_player_died")
-	# Que una puerta instantánea en el punto de respawn no lo mande de vuelta
-	get_tree().call_group("doors", "rearm")
+	await get_tree().create_timer(death_reload_delay).timeout
+	Global.respawn_grace_pending = true
+	get_tree().reload_current_scene()
 
 
 func _feet_offset() -> float:
@@ -132,7 +139,8 @@ func set_silhouette(enabled: bool) -> void:
 ## true si puede usar un objeto del mundo (p. ej. el altar): parado en el piso
 ## y sin estar construyendo ni entrando por una puerta.
 func can_interact() -> bool:
-	return is_on_floor() and state != State.BUILDING and state != State.DOOR \
+	return is_on_floor() and state != State.BUILDING and state != State.DOOR and state != State.DEAD \
+			and state != State.ITEM \
 			and not _riding_moving_boat() and not _shot_alive()
 
 
@@ -144,7 +152,8 @@ func _shot_alive() -> bool:
 
 ## La puerta lo llama al apretar UP. Devuelve false si ahora no se puede entrar.
 func enter_door(door_x: float) -> bool:
-	if state == State.BUILDING or state == State.DOOR or not is_on_floor() \
+	if state == State.BUILDING or state == State.DOOR or state == State.DEAD or state == State.ITEM \
+			or not is_on_floor() \
 			or _riding_moving_boat() or _shot_alive():
 		return false
 	state = State.DOOR
@@ -169,7 +178,8 @@ func _physics_process(delta: float) -> void:
 	# Movimiento horizontal (bloqueado mientras se construye, se entra por una puerta
 	# o hay un proyectil de teleport vivo)
 	var direction := 0.0
-	if state != State.BUILDING and state != State.DOOR and not riding and not _shot_alive():
+	if state != State.BUILDING and state != State.DOOR and state != State.ITEM and not riding \
+			and not _shot_alive():
 		direction = Input.get_axis("LEFT", "RIGHT")
 	# Parado en un bote frenado: la dirección lanza el bote en vez de caminar
 	# (si no hay lugar para que avance, camina normal)
@@ -196,6 +206,57 @@ func _physics_process(delta: float) -> void:
 		Sfx.play("land", randf_range(0.9, 1.1))
 	_update_steps(delta)
 	_update_animation(direction)
+
+
+## "Objeto obtenido": la pantalla se pone negra salvo el player, que levanta los
+## brazos y muestra el objeto (frames animados) sobre la cabeza durante
+## item_show_time, con su jingle. Mientras tanto no se puede hacer nada.
+## start_dark: opacidad del negro al arrancar (para seguir sin corte desde una
+## pantalla ya oscurecida, como el monólogo). Lo usa la hermana al dar la vara.
+func show_item(frames: Array[Texture2D], start_dark: float = 0.0) -> void:
+	if state == State.DEAD or state == State.DOOR:
+		return
+	state = State.ITEM
+	velocity.x = 0.0
+	# Telón negro sobre toda la room; el player (y el objeto, hijo suyo) por encima
+	var dark := ColorRect.new()
+	dark.top_level = true
+	dark.z_as_relative = false
+	dark.z_index = 100
+	dark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dark.color = Color.BLACK
+	dark.position = Vector2(-64, -64)
+	dark.size = get_viewport_rect().size + Vector2(128, 128)
+	dark.modulate.a = start_dark
+	get_parent().add_child(dark)
+	var old_z := z_index
+	var old_relative := z_as_relative
+	z_as_relative = false
+	z_index = 101
+	create_tween().tween_property(dark, "modulate:a", 1.0, item_dark_time)
+	var item_frames := SpriteFrames.new()
+	item_frames.set_animation_speed(&"default", item_fps)
+	for tex in frames:
+		item_frames.add_frame(&"default", tex)
+	var item := AnimatedSprite2D.new()
+	item.sprite_frames = item_frames
+	item.position = item_offset + Vector2(0, 4) # arranca un poco más abajo y sube
+	add_child(item)
+	item.play(&"default")
+	create_tween().tween_property(item, "position", item_offset, 0.25) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	Sfx.play("item_get")
+	await get_tree().create_timer(item_show_time).timeout
+	if is_instance_valid(item):
+		item.queue_free()
+	var tw := create_tween()
+	tw.tween_property(dark, "modulate:a", 0.0, item_dark_time)
+	await tw.finished
+	dark.queue_free()
+	z_index = old_z
+	z_as_relative = old_relative
+	if state == State.ITEM:
+		state = State.NORMAL
 
 
 ## Dispara el proyectil de teleport hacia donde mira.
@@ -299,7 +360,7 @@ func _update_ability(delta: float) -> void:
 			and Global.has_ability(&"teleport") and not _shot_alive():
 		_fire_shot()
 	# Con eat también come las piedras que toca de costado (empujando contra ellas)
-	if state != State.DOOR and _chomp_timer <= 0.0 and Global.has_ability(&"eat"):
+	if state != State.DOOR and state != State.ITEM and _chomp_timer <= 0.0 and Global.has_ability(&"eat"):
 		if _chomp_walls():
 			_chomp_timer = chomp_interval
 	match state:
@@ -478,7 +539,9 @@ func _spawn_block() -> void:
 
 
 func _update_animation(direction: float) -> void:
-	if state == State.BUILDING:
+	if state == State.ITEM:
+		sprite.play("itemget")
+	elif state == State.BUILDING:
 		sprite.play("build")
 	elif state == State.DOOR:
 		sprite.play("walk")

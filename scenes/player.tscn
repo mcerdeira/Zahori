@@ -17,39 +17,12 @@
 [ext_resource type="Texture2D" uid="uid://cl60soibcknd8" path="res://sprites/player_chomp_spr_1.png" id="chomp_1"]
 [ext_resource type="Texture2D" uid="uid://bndc7g1x0fy61" path="res://sprites/player_chomp_spr_2.png" id="chomp_2"]
 [ext_resource type="Texture2D" uid="uid://df1kn08mty337" path="res://sprites/player_chomp_spr_3.png" id="chomp_3"]
-[ext_resource type="Texture2D" path="res://sprites/player_shoot_spr_0.png" id="shoot_0"]
-[ext_resource type="Texture2D" path="res://sprites/player_shoot_spr_1.png" id="shoot_1"]
+[ext_resource type="Texture2D" uid="uid://omaimdbtl1up" path="res://sprites/player_itemget_spr_0.png" id="itemget_0"]
+[ext_resource type="Texture2D" uid="uid://b8et1re50xuyt" path="res://sprites/player_shoot_spr_0.png" id="shoot_0"]
+[ext_resource type="Texture2D" uid="uid://cwvsor1yhj3cp" path="res://sprites/player_shoot_spr_1.png" id="shoot_1"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_2l2dv"]
 animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("shoot_0")
-}, {
-"duration": 1.0,
-"texture": ExtResource("shoot_1")
-}],
-"loop": false,
-"name": &"shoot",
-"speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("chomp_0")
-}, {
-"duration": 1.0,
-"texture": ExtResource("chomp_1")
-}, {
-"duration": 1.0,
-"texture": ExtResource("chomp_2")
-}, {
-"duration": 1.0,
-"texture": ExtResource("chomp_3")
-}],
-"loop": false,
-"name": &"chomp",
-"speed": 12.0
-}, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("1_3v2ag")
@@ -66,6 +39,23 @@ animations = [{
 "loop": 1,
 "name": &"build",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("chomp_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("chomp_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("chomp_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("chomp_3")
+}],
+"loop": 0,
+"name": &"chomp",
+"speed": 12.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -88,6 +78,25 @@ animations = [{
 "loop": 1,
 "name": &"fall",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("itemget_0")
+}],
+"loop": 0,
+"name": &"itemget",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("shoot_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("shoot_1")
+}],
+"loop": 0,
+"name": &"shoot",
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,
