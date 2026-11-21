@@ -96,6 +96,7 @@ offset_bottom = 341.0
 
 [node name="Door2" parent="." unique_id=993677731 instance=ExtResource("12_is725")]
 position = Vector2(536, 102)
+target_scene = "uid://4ptrhygnclmn"
 
 [node name="Altar" parent="." unique_id=1042846352 instance=ExtResource("13_niiem")]
 position = Vector2(136, 136)

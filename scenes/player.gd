@@ -119,6 +119,7 @@ func die() -> void:
 	_vanishing.clear()
 	await get_tree().create_timer(death_reload_delay).timeout
 	Global.respawn_grace_pending = true
+	Global.discard_pending_tablet_pieces() # el fragmento agarrado en esta room vuelve a su lugar
 	get_tree().reload_current_scene()
 
 

@@ -1,5 +1,5 @@
 extends Node
-## Saca una captura de cada room (scenes/rooms/levelN.tscn) a tools/room_shots/levelN.png,
+## Saca una captura de cada room (scenes/rooms/levelN.tscn y secretN.tscn) a tools/room_shots/<room>.png,
 ## para que tools/gen_map.py las use como miniaturas. Uso personal, no va en el juego.
 ##
 ## Uso: godot --path . res://tools/capture_rooms.tscn
@@ -12,7 +12,7 @@ const WAIT_FRAMES := 6  # frames que se deja correr la room antes de capturar
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
-	var re := RegEx.create_from_string("^level\\d+\\.tscn$")
+	var re := RegEx.create_from_string("^(level|secret)\\d+\\.tscn$")
 	var files := Array(DirAccess.get_files_at(ROOMS_DIR)).filter(func(f): return re.search(f) != null)
 	for f in files:
 		await _capture(f)

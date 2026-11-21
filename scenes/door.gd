@@ -88,6 +88,7 @@ func _enter() -> void:
 	if target_scene.is_empty():
 		push_warning("Door '%s' no tiene target_scene configurada" % name)
 		return
+	Global.confirm_tablet_pieces() # salió de la room: los fragmentos agarrados quedan
 	if DoorMaze.is_maze_door(self):
 		# Puerta del laberinto: el destino lo decide DoorMaze. El player aparece
 		# en su posición inicial de la room (la entrada), no en una puerta.

@@ -9,11 +9,11 @@ var max_blocks: int = 4
 
 # Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
-	&"blocks": false,
-	&"hydro": false,
-	&"eat": false,
-	&"reach": false,
-	&"teleport": false,
+	&"blocks": true,
+	&"hydro": true,
+	&"eat": true,
+	&"reach": true,
+	&"teleport": true,
 	&"zahori": false,
 }
 
@@ -23,6 +23,15 @@ var respawn_grace_pending: bool = false
 
 # Altares cuyo puzzle ya se resolvió
 var solved_altars: Dictionary = {}
+
+# Fragmentos de la tableta de piedra (coleccionable opcional). Ver scenes/tablet_piece.gd.
+# Un fragmento recién agarrado queda pendiente hasta que el player sale de la room
+# por una puerta; si muere antes, se pierde y vuelve a aparecer (así no sirve
+# suicidarse para volver a la puerta con el fragmento en la mano).
+# { índice (0..TABLET_PIECE_COUNT-1): true }
+const TABLET_PIECE_COUNT := 4
+var tablet_pieces: Dictionary = {}          # confirmados
+var pending_tablet_pieces: Dictionary = {}  # agarrados en la room actual
 
 # true si el player llegó a la room actual atravesando una puerta.
 var came_from_door: bool = false
@@ -56,6 +65,27 @@ func has_ability(id: StringName) -> bool:
 func set_ability(id: StringName, enabled: bool) -> void:
 	abilities[id] = enabled
 	ability_changed.emit(id, enabled)
+
+## true si el fragmento está confirmado o agarrado en esta room (no aparece en el mundo).
+func has_tablet_piece(index: int) -> bool:
+	return tablet_pieces.has(index) or pending_tablet_pieces.has(index)
+
+## Agarrado: queda pendiente hasta salir de la room (confirm_tablet_pieces).
+func add_tablet_piece(index: int) -> void:
+	pending_tablet_pieces[index] = true
+
+## Fragmentos que tiene el player, contando los pendientes.
+func tablet_piece_count() -> int:
+	return tablet_pieces.size() + pending_tablet_pieces.size()
+
+## Al salir de la room por una puerta: los pendientes pasan a ser definitivos.
+func confirm_tablet_pieces() -> void:
+	tablet_pieces.merge(pending_tablet_pieces)
+	pending_tablet_pieces.clear()
+
+## Al morir (o salir al título): los pendientes se pierden y vuelven a su lugar.
+func discard_pending_tablet_pieces() -> void:
+	pending_tablet_pieces.clear()
 
 func is_altar_solved(number: int) -> bool:
 	return solved_altars.has(number)

@@ -21,6 +21,9 @@ TILE = 16
 COLS = 36  # 576 / 16
 ROWS = 21  # 324 / 16 = 20.25 (la fila 20 se ve a medias)
 EDIBLE_TEXTURE = "res://sprites/block_stone_spr_0.png"
+# Prefijos de las escenas que son rooms jugables: levelN (y las internas del laberinto,
+# level181a...) y las secretas secretN. El resto de scenes/rooms (_template, ...) no cuenta.
+ROOM_PREFIXES = ("level", "secret")
 
 # Rects de colisión de cada escena instanciada: (offset_x, offset_y, ancho, alto) en px
 # relativos al origen del nodo, antes de escalar. Sacados de los .tscn de cada entidad.
@@ -65,8 +68,8 @@ class Entity:
 
 @dataclass
 class Room:
-    path: str  # res://scenes/rooms/levelN.tscn
-    name: str  # levelN
+    path: str  # res://scenes/rooms/levelN.tscn (o secretN.tscn)
+    name: str  # levelN / secretN
     uid: str
     grid: list  # grid[y][x] in ' ', '#', 'S'
     water_tiles: set
@@ -183,9 +186,14 @@ def parse_room(path: Path) -> Room:
                 entities, player_start)
 
 
+def room_files():
+    """Escenas de rooms jugables en scenes/rooms (ver ROOM_PREFIXES), ordenadas por nombre."""
+    return sorted(p for prefix in ROOM_PREFIXES for p in ROOMS_DIR.glob(f"{prefix}*.tscn"))
+
+
 def load_rooms():
     rooms = {}
-    for p in sorted(ROOMS_DIR.glob("level*.tscn")):
+    for p in room_files():
         r = parse_room(p)
         rooms[r.path] = r
     by_uid = {r.uid: r.path for r in rooms.values()}

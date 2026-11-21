@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """Genera un mapa (PNG) de las rooms y a dónde lleva cada puerta. Uso personal, no va en el juego.
 
-Lee los `scenes/rooms/levelN.tscn`, resuelve el `target_scene` de cada puerta (uid o ruta) y dibuja
-cada room como un cuadradito con su número. Si una puerta apunta a un número en vez de a una escena,
-la room destino se dibuja igual pero en amarillo (todavía no existe la escena).
+Lee los `scenes/rooms/levelN.tscn` y `secretN.tscn`, resuelve el `target_scene` de cada puerta (uid o
+ruta) y dibuja cada room como un cuadradito con su número (las secretas como S0, S1... con borde
+violeta). Si una puerta apunta a un número en vez de a una escena, la room destino (levelN) se dibuja
+igual pero en amarillo (todavía no existe la escena).
 Marca en la esquina cada altar con su número: H2 = altar de pista 2, P1 = altar de puzzle 1.
+Abajo a la izquierda marca los fragmentos de la tableta coleccionable con su `piece_index` (T0..T3).
 Antes de dibujar corre Godot con tools/capture_rooms.tscn, que saca una captura de cada room a
-tools/room_shots/levelN.png (abre una ventana un par de segundos). Cada room se dibuja con su captura
+tools/room_shots/<room>.png (abre una ventana un par de segundos). Cada room se dibuja con su captura
 en miniatura; si no hay (Godot falló o se pasó --no-capture), como un cuadro azul.
 
 A la izquierda dibuja un machete con la palabra de cada altar de puzzle (puzzles/altar_XX.tres) y,
 para cada pista (puzzles/hint_XX.tres), la palabra del puzzle al que apunta (su campo `puzzle`) o,
-si no tiene, la primera línea del texto. Un * rojo al lado de la etiqueta marca los altares que no
-están ubicados en ninguna room o que están en más de una (contando también las del laberinto).
+si no tiene, la primera línea del texto. Debajo, cada fragmento de la tableta con la room donde está.
+Un * rojo al lado de la etiqueta marca los altares y fragmentos que no están ubicados en ninguna room
+o que están en más de una (contando también las del laberinto).
 
 Uso: python3 tools/gen_map.py [--no-capture] [salida.png]   (por defecto tools/map.png)
      GODOT=/ruta/al/binario si `godot` no está en el PATH.
@@ -27,6 +30,9 @@ from collections import deque
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rooms_model import room_files  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 ROOMS_DIR = ROOT / "scenes" / "rooms"
@@ -49,11 +55,14 @@ COL_BORDER = (240, 240, 240)
 COL_TEXT = (20, 20, 28)
 COL_EDGE = (200, 200, 210)
 COL_START = (120, 220, 120)
+COL_SECRET = (190, 110, 255)  # borde de las rooms secretas
 COL_LABEL_BG = (240, 240, 240)
 COL_SIDE_BG = (26, 24, 33)
 COL_HEADER = (255, 200, 107)
 COL_NO_PUZZLE = (150, 150, 160)  # pistas que no apuntan a ningún puzzle
-COL_WARN = (255, 70, 70)  # el * de altares sin ubicar o repetidos
+COL_WARN = (255, 70, 70)  # el * de altares y fragmentos sin ubicar o repetidos
+COL_TABLET = (225, 215, 185)  # etiqueta de los fragmentos de la tableta (T0..T3)
+TABLET = 2  # "kind" de las etiquetas de fragmentos (0 = puzzle, 1 = pista)
 # Un color por altar de puzzle (P1, P2, ...); las pistas toman el del puzzle al que apuntan.
 # Sin amarillo, que es el de las rooms sin escena.
 PUZZLE_COLORS = [
@@ -67,11 +76,30 @@ PUZZLE_COLORS = [
     (190, 160, 110),  # marrón claro
 ]
 
-LEVEL_RE = re.compile(r"level(\d+)\.tscn$")
+# Rooms que van al mapa: levelN y secretN. Las internas del laberinto (level181a, ...) no.
+ROOM_RE = re.compile(r"^(level|secret)(\d+)\.tscn$")
+ROOM_KINDS = ("level", "secret")
+
+
+def room_key(name):
+    """Orden de las rooms: primero las levelN, después las secretN, cada una por número."""
+    m = re.match(r"([a-z]+)(\d+)$", name)
+    return (ROOM_KINDS.index(m.group(1)), int(m.group(2)))
+
+
+def room_label(name):
+    """Lo que se escribe en el cuadro: el número para levelN, S + número para secretN."""
+    kind, num = ROOM_KINDS[room_key(name)[0]], room_key(name)[1]
+    return str(num) if kind == "level" else f"S{num}"
+
+
+def is_secret(name):
+    return name.startswith("secret")
 
 
 def parse_scene(path: Path):
-    """Devuelve (uid, puertas, altares) de un .tscn. Puertas: lista de target_scene. Altares: lista de kinds."""
+    """Devuelve (uid, puertas, altares, fragmentos) de un .tscn. Puertas: lista de target_scene.
+    Altares: lista de (kind, número). Fragmentos: lista de piece_index de la tableta."""
     text = path.read_text(encoding="utf-8")
     header = re.match(r'\[gd_scene[^\]]*uid="([^"]+)"', text)
     uid = header.group(1) if header else None
@@ -80,7 +108,7 @@ def parse_scene(path: Path):
     for m in re.finditer(r'\[ext_resource[^\]]*path="([^"]+)"[^\]]*id="([^"]+)"', text):
         ext[m.group(2)] = m.group(1)
 
-    doors, altars = [], []
+    doors, altars, tablets = [], [], []
     # Separar en secciones [ ... ] con sus propiedades.
     sections = re.split(r"\n(?=\[)", text)
     for sec in sections:
@@ -96,11 +124,14 @@ def parse_scene(path: Path):
             number = re.search(r"^altar_number = (\d+)", sec, re.M)
             # (kind, número): kind 0 = PUZZLE, 1 = HINT; altar_number por defecto es 1.
             altars.append((int(kind.group(1)) if kind else 0, int(number.group(1)) if number else 1))
-    return uid, doors, altars
+        elif inst_path.endswith("tablet_piece.tscn"):
+            index = re.search(r"^piece_index = (\d+)", sec, re.M)
+            tablets.append(int(index.group(1)) if index else 0)  # piece_index por defecto es 0
+    return uid, doors, altars, tablets
 
 
 def collect():
-    """Arma el grafo: rooms {num: {...}} y aristas dirigidas (origen, destino)."""
+    """Arma el grafo: rooms {nombre: {...}} y aristas dirigidas (origen, destino)."""
     uid_to_path = {}
     for f in ROOT.rglob("*.tscn"):
         if ".godot" in f.parts:
@@ -110,36 +141,33 @@ def collect():
             uid_to_path[m.group(1)] = f
 
     rooms, edges = {}, []
-    for f in sorted(ROOMS_DIR.glob("level*.tscn")):
-        m = LEVEL_RE.search(f.name)
-        if not m:
+    for f in room_files():
+        if not ROOM_RE.match(f.name):
             continue  # rooms internas del laberinto de puertas (level181a, ...)
-        num = int(m.group(1))
-        _, doors, altars = parse_scene(f)
-        rooms[num] = {"missing": False, "altars": altars, "doors": doors}
+        _, doors, altars, tablets = parse_scene(f)
+        rooms[f.stem] = {"missing": False, "altars": altars, "doors": doors, "tablets": tablets}
 
-    for num, room in list(rooms.items()):
+    for name, room in list(rooms.items()):
         for target in room["doors"]:
             if not target:
-                print(f"aviso: level{num} tiene una puerta sin target_scene")
+                print(f"aviso: {name} tiene una puerta sin target_scene")
                 continue
             if target == "-1":
                 continue  # puerta del laberinto (la resuelve DoorMaze en el juego)
             if target.isdigit():
-                dest = int(target)
+                dest = f"level{int(target)}"
             else:
                 if target.startswith("uid://"):
                     dest_path = uid_to_path.get(target)
                 else:
                     dest_path = ROOT / target.removeprefix("res://")
-                m = LEVEL_RE.search(dest_path.name) if dest_path else None
-                if not m:
-                    print(f"aviso: level{num} tiene una puerta a algo que no es una room: {target}")
+                if not dest_path or not ROOM_RE.match(dest_path.name):
+                    print(f"aviso: {name} tiene una puerta a algo que no es una room: {target}")
                     continue
-                dest = int(m.group(1))
+                dest = dest_path.stem
             if dest not in rooms:
-                rooms[dest] = {"missing": True, "altars": [], "doors": []}
-            edges.append((num, dest))
+                rooms[dest] = {"missing": True, "altars": [], "doors": [], "tablets": []}
+            edges.append((name, dest))
     return rooms, edges
 
 
@@ -150,7 +178,7 @@ def layout(rooms, edges):
         adj[a].append(b)
         adj[b].append(a)
     depth = {}
-    for start in sorted(rooms):
+    for start in sorted(rooms, key=room_key):
         if start in depth:
             continue
         base = max(depth.values(), default=-1) + 1
@@ -158,12 +186,12 @@ def layout(rooms, edges):
         q = deque([start])
         while q:
             n = q.popleft()
-            for m in sorted(adj[n]):
+            for m in sorted(adj[n], key=room_key):
                 if m not in depth:
                     depth[m] = depth[n] + 1
                     q.append(m)
     cols = {}
-    for n in sorted(rooms, key=lambda n: (depth[n], n)):
+    for n in sorted(rooms, key=lambda n: (depth[n], room_key(n))):
         cols.setdefault(depth[n], []).append(n)
     # Ordenar cada columna según el promedio de fila de sus vecinos en la columna anterior
     # (baricentro), para que se crucen menos las líneas.
@@ -171,7 +199,7 @@ def layout(rooms, edges):
         prev = cols.get(d - 1, [])
         def bary(n):
             ys = [prev.index(m) for m in adj[n] if m in prev]
-            return (sum(ys) / len(ys) if ys else len(prev), n)
+            return (sum(ys) / len(ys) if ys else len(prev), room_key(n))
         cols[d].sort(key=bary)
     rows = max(len(c) for c in cols.values())
     pos = {}
@@ -286,13 +314,25 @@ def load_altar_data():
     return puzzles, hints
 
 
-def count_placed_altars():
-    """Cuántas veces aparece cada altar (kind, número) en todas las rooms, incluidas las del laberinto."""
-    counts = {}
-    for f in ROOMS_DIR.glob("level*.tscn"):
-        for altar in parse_scene(f)[2]:
+def count_placed():
+    """Recorre todas las rooms, incluidas las del laberinto. Devuelve (counts, tablet_rooms):
+    counts {(kind, número): veces que aparece} para altares y fragmentos (kind TABLET), y
+    tablet_rooms {piece_index: [rooms donde está]}."""
+    counts, tablet_rooms = {}, {}
+    for f in room_files():
+        _, _, altars, tablets = parse_scene(f)
+        for altar in altars:
             counts[altar] = counts.get(altar, 0) + 1
-    return counts
+        for i in tablets:
+            counts[(TABLET, i)] = counts.get((TABLET, i), 0) + 1
+            tablet_rooms.setdefault(i, []).append(f.stem)
+    return counts, tablet_rooms
+
+
+def tablet_piece_count():
+    """Cantidad de fragmentos de la tableta (Global.TABLET_PIECE_COUNT)."""
+    m = re.search(r"const TABLET_PIECE_COUNT := (\d+)", (ROOT / "scripts" / "Global.gd").read_text(encoding="utf-8"))
+    return int(m.group(1)) if m else 4
 
 
 def puzzle_color(n):
@@ -301,6 +341,8 @@ def puzzle_color(n):
 
 def altar_color(kind, n, hints):
     """Color de un altar: el de su puzzle; las pistas, el del puzzle al que apuntan (gris si ninguno)."""
+    if kind == TABLET:
+        return COL_TABLET
     if kind == 0:
         return puzzle_color(n)
     target = hints.get(n, (None, ""))[0]
@@ -309,12 +351,12 @@ def altar_color(kind, n, hints):
 
 def draw_chip(d, xy, kind, n, hints, font, anchor="lt"):
     """Etiqueta de un altar: puzzle = relleno de color; pista = borde de color sobre oscuro.
-    Devuelve el bbox de la etiqueta."""
-    text = ("H" if kind == 1 else "P") + str(n)
+    Fragmento de la tableta: T + índice, relleno color piedra. Devuelve el bbox de la etiqueta."""
+    text = {0: "P", 1: "H", TABLET: "T"}[kind] + str(n)
     col = altar_color(kind, n, hints)
     tb = d.textbbox(xy, text, font=font, anchor=anchor)
     box = [tb[0] - 3, tb[1] - 3, tb[2] + 3, tb[3] + 3]
-    if kind == 0:
+    if kind in (0, TABLET):
         d.rectangle(box, fill=col)
         d.text(xy, text, font=font, fill=COL_TEXT, anchor=anchor)
     else:
@@ -333,9 +375,13 @@ def main():
         sys.exit("no encontré rooms en scenes/rooms/")
     pos, w, h = layout(rooms, edges)
     puzzles, hints = load_altar_data()
-    placed = count_placed_altars()
+    placed, tablet_rooms = count_placed()
+    n_tablets = tablet_piece_count()
+    for i in sorted(tablet_rooms):
+        if i >= n_tablets:
+            print(f"aviso: fragmento T{i} fuera de rango (hay {n_tablets}) en {', '.join(tablet_rooms[i])}")
 
-    legend = "HN: hint N (color del puzzle al que apunta)  PN: puzzle N  amarillo: sin escena  azul: sin captura  borde verde: inicio  flecha: puerta de ida"
+    legend = "HN: hint N (color del puzzle al que apunta)  PN: puzzle N  TN: fragmento de tableta N  SN: secreta N (borde violeta)  amarillo: sin escena  azul: sin captura  borde verde: inicio  flecha: puerta de ida"
     w = max(w, MARGIN * 2 + len(legend) * 8)  # que entre la leyenda (8 px por caracter)
     img = Image.new("RGB", (w, h), COL_BG)
     d = ImageDraw.Draw(img)
@@ -357,11 +403,11 @@ def main():
         if not both:
             draw_arrow(d, pts)
 
-    start = min(n for n, r in rooms.items() if not r["missing"])
+    start = min((n for n, r in rooms.items() if not r["missing"]), key=room_key)
     for n, (x, y) in pos.items():
         r = rooms[n]
-        shot = SHOTS_DIR / f"level{n}.png"
-        border = COL_START if n == start else COL_BORDER
+        shot = SHOTS_DIR / f"{n}.png"
+        border = COL_START if n == start else COL_SECRET if is_secret(n) else COL_BORDER
         has_shot = not r["missing"] and shot.exists()
         if has_shot:
             thumb = Image.open(shot).convert("RGB").resize((BOX_W, BOX_H), Image.LANCZOS)
@@ -373,11 +419,13 @@ def main():
 
         # Número: centrado en los cuadros de color; en una etiqueta arriba a la izquierda sobre la captura.
         if has_shot:
-            label_box = d.textbbox((x + 6, y + 6), str(n), font=font_big)
-            d.rectangle([label_box[0] - 3, label_box[1] - 3, label_box[2] + 3, label_box[3] + 3], fill=COL_LABEL_BG)
-            d.text((x + 6, y + 6), str(n), font=font_big, fill=COL_TEXT)
+            label = room_label(n)
+            label_box = d.textbbox((x + 6, y + 6), label, font=font_big)
+            d.rectangle([label_box[0] - 3, label_box[1] - 3, label_box[2] + 3, label_box[3] + 3],
+                        fill=COL_SECRET if is_secret(n) else COL_LABEL_BG)
+            d.text((x + 6, y + 6), label, font=font_big, fill=COL_TEXT)
         else:
-            d.text((x + BOX_W / 2, y + BOX_H / 2), str(n), font=font_big, fill=COL_TEXT, anchor="mm")
+            d.text((x + BOX_W / 2, y + BOX_H / 2), room_label(n), font=font_big, fill=COL_TEXT, anchor="mm")
 
         # Un tag por altar (H2, P1...), primero las pistas, arriba a la derecha.
         # Se dibujan de derecha a izquierda, así que se recorren al revés.
@@ -385,6 +433,12 @@ def main():
         for k, num in reversed(sorted(r["altars"], key=lambda a: (-a[0], a[1]))):
             box = draw_chip(d, (tx, y + 7), k, num, hints, font_small, anchor="rt")
             tx = box[0] - 7
+
+        # Fragmentos de la tableta (T0..T3), abajo a la izquierda.
+        tx = x + 7
+        for i in sorted(r["tablets"]):
+            box = draw_chip(d, (tx, y + BOX_H - 7), TABLET, i, hints, font_small, anchor="lb")
+            tx = box[2] + 7
 
     d.text((MARGIN, h - MARGIN / 2 - 8), legend.upper(), font=font_small, fill=COL_EDGE)
 
@@ -400,6 +454,10 @@ def main():
             max_chars = (SIDE_W - 72) // 8
             text = first if len(first) <= max_chars else first[: max_chars - 2] + ".."
         sheet.append((text, (1, n)))
+    sheet += [("", None), ("TABLETS", None)]
+    for i in range(n_tablets):
+        where = tablet_rooms.get(i)
+        sheet.append((", ".join(where) if where else "SIN UBICAR", (TABLET, i)))
     full = Image.new("RGB", (w + SIDE_W, max(h, MARGIN * 2 + (len(sheet) + 2) * SIDE_LINE)), COL_BG)
     full.paste(img, (SIDE_W, 0))
     ds = ImageDraw.Draw(full)

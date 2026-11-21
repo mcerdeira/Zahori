@@ -246,3 +246,29 @@ chord = (square(146.83, d, 0.125) * 0.3 + square(174.61 * 1.004, d, 0.125) * 0.2
          + square(207.65 * 0.997, d, 0.25) * 0.2 + triangle(73.42, d) * 0.75) \
     * trem * env(d, attack=0.03, curve=1.8)
 save("item_get", concat(hits, chord), 0.5)
+
+# Tableta de piedra: un fragmento encaja en su lugar. Golpe seco de piedra contra piedra
+# (ruido grave filtrado) con un rebote más chico. Usa su propio rng.
+tablet_rng = np.random.default_rng(23)
+
+
+def stone_hit(d, f):
+    n = int(RATE * d)
+    grit = np.repeat(tablet_rng.uniform(-1, 1, n // 3 + 1), 3)[:n]
+    return (lowpass(grit, 0.35) * 1.4 + triangle(sweep(f, f * 0.5, d), d) * 0.8) * env(d, attack=0.001, curve=4)
+
+
+save("stone_clack", concat(stone_hit(0.16, 110), np.zeros(int(RATE * 0.04)), stone_hit(0.08, 90) * 0.4), 0.55)
+
+# Tableta completa: la inscripción se revela. Zumbido grave que crece con un acorde
+# menor agudo que titila arriba (la, do, mi), sin percusión: misterio, no fanfarria.
+d = 2.4
+x = t(d)
+swell = np.minimum(x / 1.2, 1.0) * np.minimum((d - x) / 0.9, 1.0)
+drone = triangle(55.0, d) * 0.8 + square(110.0 * 1.003, d, 0.125) * 0.2
+shimmer = np.zeros_like(x)
+for i, f in enumerate((880.0, 1046.5, 1318.5, 1046.5, 880.0, 1318.5)):
+    start = int(RATE * (0.5 + i * 0.25))
+    seg = triangle(f, 0.5) * env(0.5, attack=0.01, curve=2.0) * 0.18
+    shimmer[start:start + len(seg)] += seg[:len(shimmer) - start]
+save("tablet_reveal", drone * swell + shimmer, 0.5)

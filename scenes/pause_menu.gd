@@ -1,12 +1,13 @@
 extends CanvasLayer
 ## Pantalla de pausa con el estilo del monitor de las terminales:
-## CONTINUE / SETTINGS / QUIT (QUIT vuelve al menú de título).
+## CONTINUE / SETTINGS / TABLET / QUIT (QUIT vuelve al menú de título).
+## TABLET (la tableta de piedra coleccionable) sólo aparece con algún fragmento.
 ## UP/DOWN eligen, `action` o ENTER confirman; Q o ESC continúan.
 
 signal closed
 
-const OPTIONS: Array[String] = ["CONTINUE", "SETTINGS", "QUIT"]
 const SETTINGS_SCENE := preload("res://scenes/settings_menu.tscn")
+const TABLET_SCENE := preload("res://scenes/tablet_viewer.tscn")
 const TITLE_SCENE := "res://scenes/Title.tscn"
 const INK := Color(0.55, 0.88, 1, 1)
 
@@ -23,7 +24,8 @@ const INK := Color(0.55, 0.88, 1, 1)
 
 var _selected := 0
 var _closing := false
-var _settings: Node = null
+var _options: Array[String] = ["CONTINUE", "SETTINGS", "QUIT"]
+var _submenu: Node = null # settings o tableta abiertos encima
 var _labels: Array[Label] = []
 var _highlight := StyleBoxFlat.new()
 
@@ -35,7 +37,12 @@ func _ready() -> void:
 	_highlight.bg_color = INK
 	_highlight.content_margin_left = 2
 	_highlight.content_margin_right = 2
-	for option in OPTIONS:
+	if Global.tablet_piece_count() > 0:
+		_options.insert(2, "TABLET")
+		# Con 4 opciones se aprietan un poco para no pisar la barra de estado
+		options_box.offset_top -= 4
+		options_box.add_theme_constant_override(&"separation", 3)
+	for option in _options:
 		var l := Label.new()
 		l.text = option
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -61,27 +68,34 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _closing or _settings:
+	if _closing or _submenu:
 		return
 	if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel"):
 		_close()
 	elif event.is_action_pressed("UP") or event.is_action_pressed("DOWN"):
-		_selected = (_selected + (1 if event.is_action_pressed("DOWN") else -1) + OPTIONS.size()) % OPTIONS.size()
+		_selected = (_selected + (1 if event.is_action_pressed("DOWN") else -1) + _options.size()) % _options.size()
 		_refresh()
 		Sfx.play("term_key")
 	elif event.is_action_pressed("action") or event.is_action_pressed("ui_accept"):
-		match OPTIONS[_selected]:
+		match _options[_selected]:
 			"CONTINUE":
 				_close()
 			"SETTINGS":
 				Sfx.play("term_ok")
-				_settings = SETTINGS_SCENE.instantiate()
-				_settings.closed.connect(func(): _settings = null)
-				add_child(_settings)
+				_open_submenu(SETTINGS_SCENE)
+			"TABLET":
+				Sfx.play("term_ok")
+				_open_submenu(TABLET_SCENE)
 			"QUIT":
 				Sfx.play("term_ok")
 				_quit_to_title()
 	get_viewport().set_input_as_handled()
+
+
+func _open_submenu(scene: PackedScene) -> void:
+	_submenu = scene.instantiate()
+	_submenu.closed.connect(func(): _submenu = null)
+	add_child(_submenu)
 
 
 ## La opción elegida va en negativo (fondo cian, letra negra), como la barra de estado.
@@ -99,6 +113,7 @@ func _refresh() -> void:
 ## Apaga el monitor, despausa y vuelve al menú de título.
 func _quit_to_title() -> void:
 	Music.stop_main_theme(0.6)
+	Global.discard_pending_tablet_pieces()
 	_close(func(): get_tree().change_scene_to_file(TITLE_SCENE))
 
 
