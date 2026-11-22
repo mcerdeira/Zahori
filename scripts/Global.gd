@@ -10,11 +10,11 @@ var max_blocks: int = 4
 # Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
 	&"blocks": true,
-	&"hydro": false,
-	&"eat": false,
-	&"reach": false,
-	&"teleport": false,
-	&"zahori": false,
+	&"hydro": true,
+	&"eat": true,
+	&"reach": true,
+	&"teleport": true,
+	&"zahori": true,
 }
 
 # true entre la muerte del player y la recarga de la room: el player nuevo
