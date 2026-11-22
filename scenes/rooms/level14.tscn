@@ -114,7 +114,7 @@ target_scene = "uid://deyuk1hfh5qv8"
 
 [node name="KillerObj" parent="." unique_id=719636805 instance=ExtResource("13_01l7n")]
 position = Vector2(294, 341)
-scale = Vector2(55, 1)
+scale = Vector2(155, 1)
 
 [node name="Ghost" parent="." unique_id=2059391882 instance=ExtResource("14_pidbj")]
 position = Vector2(280, 174)

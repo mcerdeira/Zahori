@@ -18,11 +18,21 @@ Modelo (aproximado, ver README al final del archivo):
   - hydro: el agua no mata y el bote no flota (cae hasta un tile o se pierde).
   - teleport: intercambio con plantas y fantasmas en la misma fila.
   - Bote: se lanza a izquierda/derecha y avanza hasta chocar.
-  - Morir: recarga la room y reaparece en la puerta de entrada (bote, plantas, etc. como al entrar).
-  - Altares: resolver da la habilidad; volver a uno resuelto la prende/apaga.
+  - Morir: recarga la room y reaparece en la puerta de entrada (bote, plantas, etc. como al entrar),
+    o en el último altar usado en esa room (usar cualquier altar mueve ahí el respawn hasta
+    salir por una puerta).
+    Si esa puerta está bajo el agua y no tiene hydro, se ahoga al aparecer y sale por esa
+    misma puerta (a la room de la que venía), como en el juego (player.gd: _drowned_door).
+  - Altares: resolver da la habilidad; volver a uno resuelto la prende/apaga. Los altares
+    de pista también la prenden/apagan si el puzzle al que apuntan (campo `puzzle` de
+    puzzles/hint_XX.tres) ya está resuelto.
   - Hermana: da zahori. Laberinto: con zahori se acierta la puerta; sin zahori no (salvo
     --maze-luck).
   - Los enemigos (fantasmas, enredaderas) no bloquean: se asume que se los esquiva.
+  - Objetivo: el final del laberinto (o --goal). Las rooms a las que se llega desde el
+    objetivo pero desde las que no se vuelve (la parte final) cuentan como llegada.
+  - Cuenta lo que haya fuera de la pantalla (tiles, killers, agua, puertas instant): una
+    caída que termina en un killerobj de afuera es una muerte, no una caída al vacío.
 
 Uso: python3 tools/check_progression.py [--goal ROOM] [--maze-luck] [--assume ab1,ab2]
                                         [--verbose]
@@ -70,11 +80,23 @@ def _read_puzzles():
     return out
 
 
+def _read_hints():
+    """{número de pista: número del altar de puzzle al que apunta} de puzzles/hint_XX.tres
+    (sólo las que apuntan a alguno)."""
+    out = {}
+    for p in sorted((ROOT / "puzzles").glob("hint_*.tres")):
+        m = re.search(r"^puzzle = (\d+)", p.read_text(), re.M)
+        if m and int(m.group(1)) > 0:
+            out[int(re.search(r"(\d+)", p.stem).group(1))] = int(m.group(1))
+    return out
+
+
 MAX_BLOCKS = _read_max_blocks()
 ABILITIES = _read_abilities()
 BIT = {a: 1 << i for i, a in enumerate(ABILITIES)}
 MAZE_ROOMS, MAZE_FINAL = _read_maze()
 PUZZLES = _read_puzzles()
+HINTS = _read_hints()
 START_ROOM = "res://scenes/rooms/level0.tscn"
 
 
@@ -105,6 +127,8 @@ MAX_FALL = 240.0
 SPEED = 120.0
 ACCEL = 900.0
 
+# Márgenes mínimos de la simulación alrededor de la pantalla; cada room los agranda si
+# tiene paredes, killers, agua o puertas instant más afuera (RoomSim.row_max, etc.).
 ROW_MIN = -4  # se puede subir un poco por encima de la pantalla
 ROW_MAX = ROWS + 2  # más abajo: cayó al vacío
 COL_MIN, COL_MAX = -14, COLS + 13  # más afuera: se fue de la pantalla y no vuelve
@@ -167,6 +191,15 @@ class RoomSim:
                     self.altars.setdefault(c, []).append((kind, num, e.name))
             elif e.kind == "sister":
                 self.sister |= self._stand_cells(e.rect())
+        # Límites de la simulación: la pantalla más un margen, agrandado para abarcar lo que
+        # haya afuera (paredes, killers, agua o puertas instant fuera de la pantalla). Caer
+        # más allá cuenta como "se fue de la pantalla y no vuelve".
+        extra = set(room.outside) | self.killer | self.water | set(self.instant)
+        xs = [c[0] for c in extra] or [0]
+        ys = [c[1] for c in extra] or [0]
+        self.col_min, self.col_max = min(COL_MIN, min(xs) - 1), max(COL_MAX, max(xs) + 1)
+        self.row_min = min(ROW_MIN, min(ys))
+        self.row_max = max(ROW_MAX, max(ys) + 1)
         self.plants0 = tuple(sorted((int(e.pos[0]), int(e.pos[1])) for e in room.of_kind("plant")))
         self.ghost_axes = [e.props.get("direction", 0) for e in room.of_kind("ghost")]
         self.ghosts0 = tuple(self._ghost_anchor(i, int(e.pos[0] // TILE), int(e.pos[1] // TILE))
@@ -282,7 +315,7 @@ class RoomSim:
         cells = [(x, y)]
         for s in (1, -1):
             cx, cy = x + dx * s, y + dy * s
-            while self.tile(cx, cy) == " " and COL_MIN <= cx <= COL_MAX and ROW_MIN <= cy <= ROW_MAX:
+            while self.tile(cx, cy) == " " and self.col_min <= cx <= self.col_max and self.row_min <= cy <= self.row_max:
                 cells.append((cx, cy))
                 cx, cy = cx + dx * s, cy + dy * s
         return sorted(cells)
@@ -299,7 +332,7 @@ class RoomSim:
         n = 0
         r = y
         while cur:
-            if r > ROW_MAX:
+            if r > self.row_max:
                 out.add(("void",))
                 break
             drift = max_drift(n + 1, moving_dir != 0)
@@ -312,7 +345,7 @@ class RoomSim:
                 if c in seen:
                     continue
                 seen.add(c)
-                if c < COL_MIN or c > COL_MAX:
+                if c < self.col_min or c > self.col_max:
                     out.add(("void",))
                     continue
                 if (c, r) in self.instant:
@@ -328,7 +361,7 @@ class RoomSim:
                     if lo <= nc <= hi and nc not in seen and not self.blocked(nc, r, act, boat):
                         stack.append(nc)
             nxt = {c for c in seen
-                   if COL_MIN <= c <= COL_MAX and (c, r) not in self.instant
+                   if self.col_min <= c <= self.col_max and (c, r) not in self.instant
                    and not self.deadly(c, r, act, boat, ghosts) and not self.floor(c, r, act, boat)
                    and not self.blocked(c, r + 1, act, boat)}
             cur = nxt
@@ -364,7 +397,7 @@ class RoomSim:
             limit = ROW_MAX if act & BIT.get("reach", 0) else MAX_BLOCKS
             for k in range(1, limit + 1):
                 h = y - k
-                if h < ROW_MIN or self.blocked(x, h, act, boat):
+                if h < self.row_min or self.blocked(x, h, act, boat):
                     break
                 if self.deadly(x, h, act, boat, ghosts):
                     res.append((("death",), dyn, f"build{k}"))
@@ -394,7 +427,7 @@ class RoomSim:
         ray_y = y * TILE + 9
         for d in (-1, 1):
             c = x + d
-            while COL_MIN <= c <= COL_MAX:
+            while self.col_min <= c <= self.col_max:
                 hit = None
                 for i, (ppx, ppy) in enumerate(plants):
                     if int(ppx // TILE) == c and ppy + 1 - 7 <= ray_y <= ppy + 1 + 7:
@@ -438,10 +471,10 @@ class RoomSim:
             if any(self.tile(c, r) != " " for r in rows):
                 continue  # no hay lugar: camina normal
             path = []
-            while COL_MIN <= c <= COL_MAX and not any(self.tile(c, r) != " " for r in rows):
+            while self.col_min <= c <= self.col_max and not any(self.tile(c, r) != " " for r in rows):
                 path.append(c)
                 c += d
-            if not (COL_MIN <= c <= COL_MAX):
+            if not (self.col_min <= c <= self.col_max):
                 # Avanza sin chocar: se va de la pantalla con el player (salvo puerta instantánea)
                 off = x - edge
                 ev = next((("instant", self.instant[(pc + off, y)].name)
@@ -484,6 +517,53 @@ class Game:
                     self.warnings.append(
                         f"{self.short(tp)}: ninguna puerta vuelve a {self.short(src)}; viniendo de "
                         f"ahí aparece en la última puerta por la que salió de {self.short(tp)}")
+        self.post_goal = self._post_goal_rooms()
+        if self.post_goal:
+            # La parte final es de un solo sentido a propósito: no avisar que no se vuelve
+            names = {self.short(r) for r in self.post_goal}
+            self.warnings = [w for w in self.warnings if w.split(":", 1)[0] not in names]
+
+    def _door_graph(self):
+        """{room: {rooms a las que lleva alguna puerta}} sin mirar habilidades (con el laberinto)."""
+        g = {r: set() for r in self.rooms}
+        for src, r in self.rooms.items():
+            for d in r.of_kind("door"):
+                t = d.props.get("target_scene", "")
+                if t == "-1" and src in MAZE_ROOMS:
+                    step = MAZE_ROOMS.index(src)
+                    g[src].add(MAZE_ROOMS[0])
+                    nxt = MAZE_FINAL if step == len(MAZE_ROOMS) - 1 else MAZE_ROOMS[step + 1]
+                    if nxt in self.rooms:
+                        g[src].add(nxt)
+                    continue
+                tp = resolve_target(t, self.by_uid)
+                if tp is None and t in self.args.fix:
+                    tp = self.args.fix[t]
+                if tp in self.rooms:
+                    g[src].add(tp)
+        return g
+
+    def _post_goal_rooms(self):
+        """Rooms "después del objetivo": se llega desde el objetivo pero desde ellas ya no se
+        puede volver a él (p. ej. la parte final tras salir del laberinto). Estar ahí cuenta
+        como haber llegado, no como estar encerrado."""
+        goal = self.args.goal
+        if goal not in self.rooms:
+            return set()
+        g = self._door_graph()
+        def reach(start, graph):
+            seen, stack = {start}, [start]
+            while stack:
+                for m in graph[stack.pop()]:
+                    if m not in seen:
+                        seen.add(m)
+                        stack.append(m)
+            return seen
+        rev = {r: set() for r in g}
+        for a, bs in g.items():
+            for b in bs:
+                rev[b].add(a)
+        return reach(goal, g) - reach(goal, rev)
 
     def short(self, path):
         return path.rsplit("/", 1)[-1].removesuffix(".tscn")
@@ -531,8 +611,9 @@ class Game:
         sim = self.sims[room_path]
         pos, raw_boat = self.spawn_entry(room_path, door)
         dyn = self.reset_dyn(room_path, raw_boat, act)
-        # resp: dónde reaparece y cómo arranca el bote (morir recarga la room)
-        resp = (self._px_cell(pos), raw_boat)
+        # resp: dónde reaparece, cómo arranca el bote (morir recarga la room) y la
+        # puerta por la que apareció (si está bajo el agua, sin hydro sale por ella)
+        resp = (self._px_cell(pos), raw_boat, door.name if door is not None else None)
         return (room_path, resp, act, solved, dyn, None, mem)  # posición se resuelve al expandir
 
     def reset_dyn(self, room_path, raw_boat, act):
@@ -605,13 +686,24 @@ class Game:
             room, resp, act, solved, dyn, pos, mem = nodes[i]
             sim = self.sims[room]
             if pos is None:
-                # Aparecer en resp
-                evs = [(ev, dyn, "spawn") for ev in sim.land(resp[0][0], resp[0][1], act, dyn, 0)]
+                if resp[2] and resp[0] in sim.water and not act & BIT.get("hydro", 0):
+                    # Aparece en una puerta bajo el agua sin hydro: se ahoga y sale por ella
+                    evs = [(("door", resp[2]), dyn, "ahogado al aparecer")]
+                else:
+                    # Aparecer en resp
+                    evs = [(ev, dyn, "spawn") for ev in sim.land(resp[0][0], resp[0][1], act, dyn, 0)]
             else:
                 evs = list(self.cached_moves(room, pos[0], pos[1], act, dyn))
                 # Interacciones parado
+                if pos in sim.altars and resp[0] != pos:
+                    # Usar un altar (aunque no cambie nada) lo vuelve el respawn de la room
+                    evs.append((("set", act, solved), dyn, "usar altar"))
                 for kind, num, aname in sim.altars.get(pos, []):
                     if kind != 0:
+                        # Altar de pista: si su puzzle ya está resuelto, prende/apaga esa habilidad
+                        ab = PUZZLES.get(HINTS.get(num))
+                        if ab in BIT and solved & BIT[ab] and ab not in self.args.no_toggle:
+                            evs.append((("set", act ^ BIT[ab], solved), dyn, f"toggle {ab} (pista {num})"))
                         continue
                     ab = PUZZLES.get(num)
                     if ab is None or ab not in BIT:
@@ -644,7 +736,9 @@ class Game:
                     ndyn2 = ndyn
                     if (nact ^ act) & BIT.get("hydro", 0) and ndyn[2]:
                         ndyn2 = (ndyn[0], ndyn[1], sim.boat_settle(ndyn[2], nact & BIT["hydro"]))
-                    j = nid((room, resp, nact, nsolved, ndyn2, pos, mem), i, label)
+                    # Usar un altar mueve el respawn de la room a ese altar
+                    nresp = (pos, resp[1], None) if label.startswith(("altar", "toggle", "usar altar")) else resp
+                    j = nid((room, nresp, nact, nsolved, ndyn2, pos, mem), i, label)
                 elif kind == "void":
                     j = nid(("VOID", room), i, label + " → cae al vacío / sale de pantalla")
                     void_nodes.add(j)
@@ -720,7 +814,7 @@ class Game:
 
     # --- Análisis ---
     def is_goal(self, node):
-        return node[0] == self.args.goal
+        return node[0] == self.args.goal or node[0] in self.post_goal
 
     def path_to(self, i):
         steps = []
@@ -744,7 +838,7 @@ class Game:
             if room != last_room:
                 out.append(self.short(room))
                 last_room = room
-            if lab.startswith("altar") or lab.startswith("toggle") or lab.startswith("hermana"):
+            if lab.startswith(("altar", "toggle", "hermana", "usar altar")):
                 out.append(f"[{lab}]")
         return " → ".join(out)
 
@@ -887,6 +981,9 @@ class Game:
             print(f"\n✗ El objetivo ({self.short(goal_room)}) NO es alcanzable.")
         else:
             best = min(goal_ids, key=lambda i: len(self.path_to(i)))
+            if self.post_goal:
+                print(f"\n  Después del objetivo, sin vuelta (cuentan como llegada): "
+                      f"{', '.join(sorted(self.short(r) for r in self.post_goal))}")
             print(f"\n✓ Objetivo ({self.short(goal_room)}) alcanzable. Un camino:")
             print("  " + self.describe_path(best))
             self.print_time_estimate(goal_ids)

@@ -10,6 +10,7 @@ enredaderas, la hermana) con su rect en px y sus propiedades.
 """
 
 import base64
+import math
 import re
 import struct
 from dataclasses import dataclass, field
@@ -48,14 +49,21 @@ class Entity:
     pos: tuple  # px (x, y) del origen del nodo
     scale: tuple
     props: dict = field(default_factory=dict)
+    rotation: float = 0.0  # radianes
 
     def rect(self):
-        """(x0, y0, x1, y1) en px del collider, escalado."""
+        """(x0, y0, x1, y1) en px del collider, escalado y rotado (caja que lo contiene)."""
         ox, oy, w, h = SHAPES[self.kind]
         sx, sy = self.scale
-        cx, cy = self.pos[0] + ox * sx, self.pos[1] + oy * sy
-        hw, hh = w * abs(sx) / 2, h * abs(sy) / 2
-        return (cx - hw, cy - hh, cx + hw, cy + hh)
+        # Esquinas del collider en coords locales escaladas, rotadas alrededor del origen
+        x0, x1 = (ox - w / 2) * sx, (ox + w / 2) * sx
+        y0, y1 = (oy - h / 2) * sy, (oy + h / 2) * sy
+        c, s = math.cos(self.rotation), math.sin(self.rotation)
+        xs, ys = [], []
+        for lx, ly in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):
+            xs.append(self.pos[0] + lx * c - ly * s)
+            ys.append(self.pos[1] + lx * s + ly * c)
+        return (min(xs), min(ys), max(xs), max(ys))
 
     def cells(self):
         """Celdas de la grilla que toca el rect (puede salirse de la room)."""
@@ -71,15 +79,17 @@ class Room:
     path: str  # res://scenes/rooms/levelN.tscn (o secretN.tscn)
     name: str  # levelN / secretN
     uid: str
-    grid: list  # grid[y][x] in ' ', '#', 'S'
+    grid: list  # grid[y][x] in ' ', '#', 'S' (sólo la parte visible)
     water_tiles: set
     entities: list
     player_start: tuple  # px
+    # Tiles sólidos fuera de la pantalla (paredes "de afuera"): {(x, y): '#' o 'S'}
+    outside: dict = field(default_factory=dict)
 
     def solid(self, x, y):
         if 0 <= y < ROWS and 0 <= x < COLS:
             return self.grid[y][x]
-        return " "
+        return self.outside.get((x, y), " ")
 
     def of_kind(self, kind):
         return [e for e in self.entities if e.kind == kind]
@@ -148,6 +158,7 @@ def parse_room(path: Path) -> Room:
                     tileset_sources[int(sm.group(1))] = re.search(r'SubResource\("([^"]+)"\)', v).group(1)
 
     grid = [[" "] * COLS for _ in range(ROWS)]
+    outside = {}
     water_tiles = set()
     entities = []
     player_start = (0.0, 0.0)
@@ -162,12 +173,15 @@ def parse_room(path: Path) -> Room:
                 sub = tileset_sources.get(src)
                 tex = atlas_tex.get(sub, "")
                 solid = atlas_tex.get(f"{sub}:solid", False)
-                if not (0 <= x < COLS and 0 <= y < ROWS):
-                    continue
+                visible = 0 <= x < COLS and 0 <= y < ROWS
                 if Path(tex).name.startswith("water"):
                     water_tiles.add((x, y))
                 elif solid:
-                    grid[y][x] = "S" if tex == EDIBLE_TEXTURE else "#"
+                    ch = "S" if tex == EDIBLE_TEXTURE else "#"
+                    if visible:
+                        grid[y][x] = ch
+                    else:
+                        outside[(x, y)] = ch
             continue
         im = re.search(r'instance=ExtResource\("([^"]+)"\)', head)
         if not im:
@@ -178,12 +192,13 @@ def parse_room(path: Path) -> Room:
         p = {k: _value(v) for k, v in props.items()}
         pos = p.pop("position", (0.0, 0.0))
         scale = p.pop("scale", (1.0, 1.0))
+        rotation = float(p.pop("rotation", 0.0))
         if kind == "player":
             player_start = pos
             continue
-        entities.append(Entity(kind, name, pos, scale, p))
+        entities.append(Entity(kind, name, pos, scale, p, rotation))
     return Room(f"res://scenes/rooms/{path.name}", path.stem, uid, grid, water_tiles,
-                entities, player_start)
+                entities, player_start, outside)
 
 
 def room_files():

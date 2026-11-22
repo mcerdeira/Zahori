@@ -2,8 +2,9 @@ extends Control
 ## Pantalla de título. Enredaderas que crecen de fondo (desenfocadas, renderizadas
 ## a media resolución con blur), otras adelante como silueta, chispas, y el
 ## nombre del juego. Con cualquier tecla aparece el menú abajo al centro:
-## NEW GAME / CONTINUE / SETTINGS / QUIT. Por ahora NEW GAME y CONTINUE arrancan
-## desde la Intro (falta el sistema de saves).
+## NEW GAME / CONTINUE / SETTINGS / QUIT. NEW GAME arranca una partida nueva
+## desde la Intro; CONTINUE carga user://game.save (Global.load_game) y va directo
+## a la room guardada (gris y deshabilitado si no hay partida guardada).
 
 const NEXT_SCENE := "res://scenes/Intro.tscn"
 const SETTINGS_SCENE := preload("res://scenes/settings_menu.tscn")
@@ -13,6 +14,7 @@ const OPTIONS: Array[String] = ["NEW GAME", "CONTINUE", "SETTINGS", "QUIT"]
 const INK := Color(0.95, 0.95, 0.97)
 const DIM := Color(0.42, 0.43, 0.48)
 const ACCENT := Color(1.0, 0.78, 0.42)
+const DISABLED := Color(0.22, 0.22, 0.26) # CONTINUE sin partida guardada
 
 @export var fade_in_time: float = 2.0     # segundos del fundido desde negro
 @export var title_delay: float = 1.2      # segundos hasta que aparece el nombre
@@ -41,6 +43,7 @@ var _menu_t := 0.0      # segundos desde que apareció el menú
 var _time := 0.0
 var _settings: Node = null
 var _intro_tween: Tween
+var _has_save := false
 
 
 func _ready() -> void:
@@ -49,6 +52,9 @@ func _ready() -> void:
 		get_tree().change_scene_to_file.call_deferred(Global.DEBUG_START_SCENE)
 		return
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	_has_save = Global.has_save()
+	if _has_save:
+		_selected = OPTIONS.find("CONTINUE")
 	var area := size
 	back_viewport.size = Vector2i((area / 2.0).ceil())
 	back_vines.scale = Vector2(0.5, 0.5)
@@ -143,12 +149,21 @@ func _show_menu() -> void:
 
 
 func _choose() -> void:
+	if OPTIONS[_selected] == "CONTINUE" and not _has_save:
+		Sfx.play("term_err")
+		return
 	Sfx.play("term_ok")
 	sparks.burst(_option_pos(_selected) + Vector2(0, -4), 10)
 	match OPTIONS[_selected]:
-		"NEW GAME", "CONTINUE":
-			# TODO: CONTINUE va a cargar la partida guardada cuando haya saves
-			_start_game()
+		"NEW GAME":
+			Global.reset_game()
+			_start_game(NEXT_SCENE)
+		"CONTINUE":
+			var room := Global.load_game() if _has_save else ""
+			if room.is_empty():
+				Sfx.play("term_err")
+				return
+			_start_game(room, true)
 		"SETTINGS":
 			_settings = SETTINGS_SCENE.instantiate()
 			_settings.closed.connect(func(): _settings = null)
@@ -161,13 +176,18 @@ func _choose() -> void:
 			tw.tween_callback(get_tree().quit)
 
 
-func _start_game() -> void:
+## Fundido a negro y a `scene`. in_game: va directo a una room (partida cargada),
+## así que arranca el tema principal (en las intros lo arranca Intro2).
+func _start_game(scene: String, in_game := false) -> void:
 	_state = State.LEAVING
 	Music.stop_title_theme(leave_time)
 	var tw := create_tween()
 	tw.tween_property(fade, "modulate:a", 1.0, leave_time)
 	tw.tween_interval(0.3)
-	tw.tween_callback(func(): get_tree().change_scene_to_file(NEXT_SCENE))
+	tw.tween_callback(func():
+		if in_game:
+			Music.play_main_theme()
+		get_tree().change_scene_to_file(scene))
 
 
 # --- Dibujo del prompt y del menú -------------------------------------------------
@@ -196,7 +216,10 @@ func _draw_ui() -> void:
 			continue
 		var pos := _option_pos(i) + Vector2(0, (1.0 - a) * 6.0)
 		var sel := i == _selected
-		_text_centered(pos, OPTIONS[i], Color(INK if sel else DIM, a))
+		var color := INK if sel else DIM
+		if OPTIONS[i] == "CONTINUE" and not _has_save:
+			color = DISABLED
+		_text_centered(pos, OPTIONS[i], Color(color, a))
 		if sel:
 			var half := FONT.get_string_size(OPTIONS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x / 2.0
 			var bob := roundf(sin(_time * 4.0))

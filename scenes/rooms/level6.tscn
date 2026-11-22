@@ -84,7 +84,11 @@ scale = Vector2(48, 8)
 
 [node name="KillerObj" parent="." unique_id=626013964 instance=ExtResource("9_8a1vv")]
 position = Vector2(286, 332)
-scale = Vector2(38, 1)
+scale = Vector2(85, 1)
+
+[node name="KillerObj2" parent="." unique_id=1930026133 instance=ExtResource("9_8a1vv")]
+position = Vector2(286, -12)
+scale = Vector2(85, 1)
 
 [node name="Boat" parent="." unique_id=226113185 instance=ExtResource("10_ldvpj")]
 position = Vector2(186, 189)

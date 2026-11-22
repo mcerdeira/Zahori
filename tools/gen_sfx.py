@@ -272,3 +272,15 @@ for i, f in enumerate((880.0, 1046.5, 1318.5, 1046.5, 880.0, 1318.5)):
     seg = triangle(f, 0.5) * env(0.5, attack=0.01, curve=2.0) * 0.18
     shimmer[start:start + len(seg)] += seg[:len(shimmer) - start]
 save("tablet_reveal", drone * swell + shimmer, 0.5)
+
+# Puerta sellada (level182): la puerta del laberinto se cierra para siempre detrás del
+# player. Golpe grave de losa de piedra (ruido filtrado + barrido hacia abajo) y un
+# retumbe largo que se apaga. Al apretar UP delante se usa el mismo, más agudo y bajito.
+seal_rng = np.random.default_rng(31)
+d = 0.9
+n = int(RATE * d)
+grit = np.repeat(seal_rng.uniform(-1, 1, n // 4 + 1), 4)[:n]
+slam = (lowpass(grit, 0.25) * 1.6 + triangle(sweep(90, 35, d), d) * 0.9
+        + square(sweep(70, 40, d), d, 0.25) * 0.25) * env(d, attack=0.002, curve=3.5)
+rumble = lowpass(np.repeat(seal_rng.uniform(-1, 1, n // 8 + 1), 8)[:n], 0.15) * env(d, attack=0.05, curve=1.6) * 0.8
+save("door_seal", slam + rumble, 0.6)

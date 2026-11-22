@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/sealed_door.gd" id="1_sealed"]
+[ext_resource type="Texture2D" path="res://sprites/door_sealed_spr_0.png" id="2_tex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sealed"]
+size = Vector2(10, 20)
+
+[node name="SealedDoor" type="Area2D"]
+z_index = -4096
+collision_layer = 0
+monitorable = false
+script = ExtResource("1_sealed")
+
+[node name="sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="collider" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_sealed")

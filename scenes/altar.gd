@@ -2,6 +2,10 @@ extends Area2D
 ## Altar: parado encima y apretando UP se abre la terminal (pausa el juego).
 ## Puede ser de puzzle (glifo que desbloquea una habilidad) o de pista (sólo
 ## muestra un texto fijo que orienta sobre la palabra de otro altar).
+## Usar la terminal guarda la partida (al abrirla y al cerrarla, por si adentro
+## se resolvió el puzzle o se prendió/apagó la habilidad): al cargar, el player
+## reaparece parado en este altar. También pasa a ser el punto de reaparición de la
+## room si muere antes de salir por una puerta.
 
 const TERMINAL_SCENE := preload("res://scenes/terminal.tscn")
 
@@ -32,12 +36,20 @@ func _process(_delta: float) -> void:
 
 
 func _open_terminal() -> void:
+	_save()
 	_terminal = TERMINAL_SCENE.instantiate()
 	_terminal.altar_number = altar_number
 	_terminal.is_hint = kind == Kind.HINT
 	_terminal.solved.connect(puzzle_solved.emit)
-	_terminal.closed.connect(func(): _terminal = null)
+	_terminal.closed.connect(func():
+		_terminal = null
+		_save())
 	get_tree().current_scene.add_child(_terminal)
+
+
+func _save() -> void:
+	Global.save_game(get_tree().current_scene.scene_file_path, global_position)
+	Global.set_altar_respawn(global_position) # al morir en esta room, reaparece acá
 
 
 func _on_body_entered(body: Node) -> void:

@@ -20,6 +20,7 @@ const ABSENT_BBCODE := "[color=#8ce0ff40]%s[/color]"
 
 @export var max_log_lines: int = 5         # líneas de historial visibles durante el puzzle
 @export var unfold_scale: float = 0.5      # escala de las letras al desplegar la palabra
+@export var hint_toggle_lines: int = 10    # líneas visibles al preguntar TURN ON/OFF tras una pista
 
 ## Número de altar: define el puzzle y el texto de la barra de estado.
 var altar_number := 1
@@ -81,6 +82,8 @@ func boot() -> void:
 		_type_log(check[0] + " ")
 		_type_log(".".repeat(18 - check[0].length() - check[1].length()), 18.0)
 		_type_log(" " + check[1] + "\n")
+	_wait(0.2)
+	_type_log("MEMORY SAVED.\n")
 	_wait(0.4)
 	_then(_show_prompt.bind("C:\\>"))
 	_wait(0.5)
@@ -299,6 +302,18 @@ func _start_hint() -> void:
 		_type_log("ERROR: FILE NOT FOUND\nALTAR-%02d.TXT\n" % altar_number)
 	else:
 		_type_log(hint.text.strip_edges() + "\n", HINT)
+	# Si el puzzle al que apunta la pista ya está resuelto, también deja prender o
+	# apagar esa habilidad, como el altar de puzzle.
+	if hint == null or hint.puzzle <= 0 or not Global.is_altar_solved(hint.puzzle):
+		return
+	puzzle = GlyphPuzzle.for_altar(hint.puzzle)
+	if puzzle == null:
+		return
+	_wait(0.6)
+	_type_log("\n")
+	# Que no se salga de la pantalla: si la pista es larga, sube y quedan las últimas líneas
+	_then(func(): _log_limit = hint_toggle_lines)
+	_start_toggle()
 
 
 # --- Altar ya resuelto: prender/apagar la habilidad --------------------------

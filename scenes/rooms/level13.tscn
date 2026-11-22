@@ -115,6 +115,11 @@ scale = Vector2(8, 3)
 position = Vector2(375, 232)
 altar_number = 4
 
+[node name="Altar2" parent="." unique_id=2053492746 instance=ExtResource("14_ii6sg")]
+position = Vector2(182, 184)
+kind = 1
+altar_number = 3
+
 [node name="KillerObj" parent="." unique_id=750762111 instance=ExtResource("15_uk74w")]
 position = Vector2(293, 336)
 scale = Vector2(85, 1)

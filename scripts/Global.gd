@@ -10,10 +10,10 @@ var max_blocks: int = 4
 # Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
 	&"blocks": true,
-	&"hydro": true,
-	&"eat": true,
-	&"reach": true,
-	&"teleport": true,
+	&"hydro": false,
+	&"eat": false,
+	&"reach": false,
+	&"teleport": false,
 	&"zahori": false,
 }
 
@@ -53,7 +53,27 @@ var water_active: bool = true
 # Meta que guarda, en cada TileMapLayer, las celdas de agua ocultas por hydro.
 const HIDDEN_WATER_META := &"hidden_water_cells"
 
+# --- Partida guardada -------------------------------------------------------------
+# Se guarda al usar una terminal (scenes/altar.gd) en user://game.save, texto plano
+# (formato ConfigFile): habilidades, altares resueltos, fragmentos de la tableta
+# confirmados y la room + posición del altar, donde reaparece el player al cargar.
+const SAVE_PATH := "user://game.save"
+const SAVE_VERSION := 1
+
+# Al cargar: el player aparece acá (coords de la room) en vez de en la posición inicial.
+var has_load_spawn := false
+var load_spawn := Vector2.ZERO
+
+# Respawn en el último altar usado de la room: al morir, la room se recarga pero el
+# player reaparece en el altar en vez de en la puerta por la que entró (así puede
+# volver a prender una habilidad que apagó). Se borra al salir por una puerta.
+var altar_respawn_scene := ""
+var altar_respawn_pos := Vector2.ZERO
+
+var _default_abilities: Dictionary
+
 func _ready() -> void:
+	_default_abilities = abilities.duplicate()
 	ability_changed.connect(func(id, _enabled): if id == &"hydro": update_water_tiles())
 	get_tree().scene_changed.connect(update_water_tiles)
 	# Por si la escena inicial ya tiene agua
@@ -98,6 +118,77 @@ func solve_altar(number: int, ability_id: StringName) -> void:
 		push_warning("Altar %d: ability_id '%s' no existe en Global.abilities" % [number, ability_id])
 		return
 	set_ability(ability_id, true)
+
+## Guarda la partida: el player va a reaparecer en `position` (coords de la room) de
+## la escena `room`. Los fragmentos pendientes (sin salir de la room) no se guardan.
+func save_game(room: String, position: Vector2) -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("game", "version", SAVE_VERSION)
+	cfg.set_value("game", "room", room)
+	cfg.set_value("game", "position", position)
+	for id in abilities:
+		cfg.set_value("abilities", String(id), abilities[id])
+	cfg.set_value("progress", "solved_altars", solved_altars.keys())
+	cfg.set_value("progress", "tablet_pieces", tablet_pieces.keys())
+	var err := cfg.save(SAVE_PATH)
+	if err != OK:
+		push_warning("No se pudo guardar la partida en %s (error %d)" % [SAVE_PATH, err])
+
+## Marca el altar como punto de reaparición de la room actual (lo llama el altar al usarlo).
+func set_altar_respawn(position: Vector2) -> void:
+	altar_respawn_scene = get_tree().current_scene.scene_file_path
+	altar_respawn_pos = position
+
+## Al salir de la room por una puerta: vuelve a reaparecer en la puerta.
+func clear_altar_respawn() -> void:
+	altar_respawn_scene = ""
+
+## Posición del altar donde reaparecer en la room actual, o null si no hay.
+func altar_respawn_for_current() -> Variant:
+	var scene := get_tree().current_scene
+	if scene and altar_respawn_scene == scene.scene_file_path:
+		return altar_respawn_pos
+	return null
+
+func has_save() -> bool:
+	return FileAccess.file_exists(SAVE_PATH)
+
+## Carga la partida guardada en el estado global y devuelve la escena de la room
+## a la que hay que ir ("" si no hay save o está roto). No cambia de escena.
+func load_game() -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load(SAVE_PATH) != OK:
+		return ""
+	var room: String = cfg.get_value("game", "room", "")
+	if room.is_empty() or not ResourceLoader.exists(room):
+		push_warning("Partida guardada con una room inválida: '%s'" % room)
+		return ""
+	reset_game()
+	for id in abilities:
+		abilities[id] = bool(cfg.get_value("abilities", String(id), abilities[id]))
+	for n in cfg.get_value("progress", "solved_altars", []):
+		solved_altars[int(n)] = true
+	for i in cfg.get_value("progress", "tablet_pieces", []):
+		tablet_pieces[int(i)] = true
+	load_spawn = cfg.get_value("game", "position", Vector2.ZERO)
+	has_load_spawn = true
+	# Si muere antes de salir de la room, reaparece en el altar donde guardó
+	altar_respawn_scene = room
+	altar_respawn_pos = load_spawn
+	return room
+
+## Deja el estado como al empezar una partida nueva (no toca el archivo de save).
+func reset_game() -> void:
+	abilities = _default_abilities.duplicate()
+	solved_altars.clear()
+	tablet_pieces.clear()
+	pending_tablet_pieces.clear()
+	respawn_grace_pending = false
+	came_from_door = false
+	previous_scene = ""
+	last_door.clear()
+	has_load_spawn = false
+	altar_respawn_scene = ""
 
 #Activar o desactivar agua
 func update_water_tiles() -> void:

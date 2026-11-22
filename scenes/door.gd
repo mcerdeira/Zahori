@@ -89,6 +89,15 @@ func _enter() -> void:
 		push_warning("Door '%s' no tiene target_scene configurada" % name)
 		return
 	Global.confirm_tablet_pieces() # salió de la room: los fragmentos agarrados quedan
+	go_through()
+
+## Cambia a la room destino como si el player hubiera salido por esta puerta.
+## También la usa el player al ahogarse apenas aparece en una puerta bajo el agua.
+func go_through() -> void:
+	if target_scene.is_empty():
+		push_warning("Door '%s' no tiene target_scene configurada" % name)
+		return
+	Global.clear_altar_respawn() # en la room nueva se reaparece en la puerta
 	if DoorMaze.is_maze_door(self):
 		# Puerta del laberinto: el destino lo decide DoorMaze. El player aparece
 		# en su posición inicial de la room (la entrada), no en una puerta.

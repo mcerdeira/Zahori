@@ -129,3 +129,7 @@ position = Vector2(389, 336)
 [node name="KillerObj" parent="." unique_id=719636805 instance=ExtResource("14_mhghw")]
 position = Vector2(297.00003, -8)
 scale = Vector2(45, 1)
+
+[node name="KillerObj2" parent="." unique_id=709839030 instance=ExtResource("14_mhghw")]
+position = Vector2(297.00003, 365)
+scale = Vector2(45, 1)

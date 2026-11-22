@@ -54,6 +54,10 @@ var _chomp_anim := 0.0 # segundos que le quedan a la animación de comer
 @onready var collider: CollisionShape2D = $collider
 
 
+## Puerta bajo el agua en la que apareció sin hydro: al morir sale por ella.
+var _drowned_door: Node = null
+
+
 func _enter_tree() -> void:
 	add_to_group("player")
 
@@ -65,9 +69,22 @@ func _ready() -> void:
 
 	# Si venimos de una puerta, aparecer parado en la puerta correspondiente
 	var door := Global.find_spawn_door(get_tree())
-	if door:
+	var altar_respawn = Global.altar_respawn_for_current()
+	if Global.has_load_spawn:
+		# Recién cargada la partida: en el altar donde se guardó
+		Global.has_load_spawn = false
+		global_position = Global.load_spawn
+	elif altar_respawn != null and Global.respawn_grace_pending:
+		# Murió después de usar un altar de esta room: reaparece en el altar
+		global_position = altar_respawn
+	elif door:
 		global_position = door.spawn_position(_feet_offset())
 		_apply_door_arrival(door)
+		# Puerta bajo el agua sin hydro: se ahoga y sale por esa misma puerta (no
+		# recarga la room, que lo volvería a poner en el agua para siempre).
+		if not resists_water() and _in_water():
+			_drowned_door = door
+			die.call_deferred(door)
 	# Recién reaparecido tras morir: invulnerable un momento
 	if Global.respawn_grace_pending:
 		Global.respawn_grace_pending = false
@@ -91,17 +108,30 @@ func _apply_door_arrival(door: Node) -> void:
 			boat.place_under(global_position + Vector2(0, _feet_offset()))
 
 
+## true si el centro del player está dentro de algún nodo de agua (grupo "water").
+func _in_water() -> bool:
+	for w in get_tree().get_nodes_in_group("water"):
+		if w.has_method("get_rect") and w.get_rect().has_point(global_position):
+			return true
+	return false
+
+
 ## El agua no lo mata si tiene la habilidad hydro.
 func resists_water() -> bool:
 	return Global.has_ability(&"hydro")
 
 
-## Muerte instantánea: explota y, al rato, recarga la room. Reaparece en la
-## puerta por la que entró (o en su posición inicial si no vino por una puerta)
+## Muerte instantánea: explota y, al rato, recarga la room. Reaparece en el último
+## altar que usó en esta room o, si no usó ninguno, en la puerta por la que entró
+## (o en su posición inicial si no vino por una puerta)
 ## con la room como al entrar: bote, plantas, enemigos y piedras comidas vuelven
 ## a su lugar, así una muerte nunca deja la room en un estado sin salida.
-func die() -> void:
-	if state == State.DOOR or state == State.DEAD or _grace > 0.0:
+## exit_door: en vez de recargar la room, sale por esa puerta (al ahogarse apenas
+## aparece en una puerta bajo el agua); ignora la invulnerabilidad de recién reaparecido.
+func die(exit_door: Node = null) -> void:
+	if exit_door == null:
+		exit_door = _drowned_door # por si el agua lo mató antes que la llamada diferida
+	if state == State.DOOR or state == State.DEAD or (_grace > 0.0 and exit_door == null):
 		return # ya se está yendo por una puerta, ya murió, o recién reapareció
 	state = State.DEAD
 	Sfx.play("die")
@@ -120,7 +150,10 @@ func die() -> void:
 	await get_tree().create_timer(death_reload_delay).timeout
 	Global.respawn_grace_pending = true
 	Global.discard_pending_tablet_pieces() # el fragmento agarrado en esta room vuelve a su lugar
-	get_tree().reload_current_scene()
+	if is_instance_valid(exit_door):
+		exit_door.go_through()
+	else:
+		get_tree().reload_current_scene()
 
 
 func _feet_offset() -> float:
