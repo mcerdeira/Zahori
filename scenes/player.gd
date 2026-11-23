@@ -178,6 +178,12 @@ func can_interact() -> bool:
 			and not _riding_moving_boat() and not _shot_alive()
 
 
+## true si puede disparar algo por contacto aunque esté en el aire o construyendo
+## (p. ej. tocar el corazón subido a la torre de bloques).
+func can_touch() -> bool:
+	return state != State.DOOR and state != State.DEAD and state != State.ITEM
+
+
 ## true mientras el proyectil de teleport está vivo (incluida su animación de pop).
 ## Mientras tanto el player queda quieto y no puede hacer nada.
 func _shot_alive() -> bool:

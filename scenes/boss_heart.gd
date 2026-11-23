@@ -1,8 +1,10 @@
 extends Node2D
 
-## Corazón vegetal del jefe final. Por ahora sólo late: toma el pulso del autoload Heartbeat,
-## así va siempre en sincronía con el sonido y la sacudida de los objetos `heartbeat.tscn`.
+## Corazón vegetal del jefe final. Toma el pulso del autoload Heartbeat, así va siempre en
+## sincronía con el sonido y la sacudida de los objetos `heartbeat.tscn`.
+## Al tocarlo el player (también subido a sus bloques) arranca el final: `ending_choice.tscn`.
 
+const ENDING_CHOICE := preload("res://scenes/ending_choice.tscn")
 const FRAMES: Array[Texture2D] = [
 	preload("res://sprites/boss_heart_beat_spr_0.png"),
 	preload("res://sprites/boss_heart_beat_spr_1.png"),
@@ -15,6 +17,16 @@ const FRAMES: Array[Texture2D] = [
 
 @onready var _sprite: Sprite2D = $Sprite
 @onready var _glow: Sprite2D = $Glow
+@onready var _touch: Area2D = $touch
+
+
+func _physics_process(_delta: float) -> void:
+	for body in _touch.get_overlapping_bodies():
+		if body.is_in_group("player") and body.has_method("can_touch") and body.can_touch():
+			set_physics_process(false)
+			process_mode = Node.PROCESS_MODE_ALWAYS # sigue latiendo durante la pregunta
+			get_tree().root.add_child(ENDING_CHOICE.instantiate())
+			return
 
 
 func _process(_delta: float) -> void:

@@ -33,6 +33,9 @@ const TABLET_PIECE_COUNT := 4
 var tablet_pieces: Dictionary = {}          # confirmados
 var pending_tablet_pieces: Dictionary = {}  # agarrados en la room actual
 
+# Final elegido al tocar el corazón (&"transcend", &"destroy" o &"awaken"). No se guarda.
+var ending: StringName = &""
+
 # true si el player llegó a la room actual atravesando una puerta.
 var came_from_door: bool = false
 # Escena (res://...) de la que venía el player al cruzar la última puerta.
@@ -183,6 +186,7 @@ func reset_game() -> void:
 	solved_altars.clear()
 	tablet_pieces.clear()
 	pending_tablet_pieces.clear()
+	ending = &""
 	respawn_grace_pending = false
 	came_from_door = false
 	previous_scene = ""
