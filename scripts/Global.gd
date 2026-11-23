@@ -9,7 +9,7 @@ var max_blocks: int = 4
 
 # Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
-	&"blocks": false,
+	&"blocks": true,
 	&"hydro": false,
 	&"eat": false,
 	&"reach": false,

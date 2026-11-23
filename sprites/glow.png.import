@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://hi2vc263d5tw"
-path="res://.godot/imported/boss_heart_glow_spr_0.png-16e25c470812fdd7983dfa8831c4ed7d.ctex"
+uid="uid://s3xajppek4uw"
+path="res://.godot/imported/glow.png-bcf9057dcbc868c06794846f57635757.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/boss_heart_glow_spr_0.png"
-dest_files=["res://.godot/imported/boss_heart_glow_spr_0.png-16e25c470812fdd7983dfa8831c4ed7d.ctex"]
+source_file="res://sprites/glow.png"
+dest_files=["res://.godot/imported/glow.png-bcf9057dcbc868c06794846f57635757.ctex"]
 
 [params]
 

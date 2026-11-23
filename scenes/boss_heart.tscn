@@ -1,32 +1,21 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://56bfjjy8tkfx"]
 
-[ext_resource type="Script" path="res://scenes/boss_heart.gd" id="1_heart"]
-[ext_resource type="Texture2D" path="res://sprites/boss_heart_beat_spr_0.png" id="2_frame"]
-[ext_resource type="Texture2D" path="res://sprites/boss_heart_glow_spr_0.png" id="3_glow"]
+[ext_resource type="Script" uid="uid://bdxnf2mnw81yq" path="res://scenes/boss_heart.gd" id="1_heart"]
+[ext_resource type="Texture2D" uid="uid://bctc32u1ry7x2" path="res://sprites/boss_heart_beat_spr_0.png" id="2_frame"]
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_glow"]
-blend_mode = 1
+[sub_resource type="CircleShape2D" id="CircleShape2D_sepl1"]
+radius = 50.08992
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_touch"]
-radius = 54.0
-height = 146.0
-
-[node name="BossHeart" type="Node2D"]
+[node name="BossHeart" type="Node2D" unique_id=696372020]
 script = ExtResource("1_heart")
 
-[node name="Glow" type="Sprite2D" parent="."]
-modulate = Color(1, 1, 1, 0)
-material = SubResource("CanvasItemMaterial_glow")
-scale = Vector2(1.35, 1.35)
-texture = ExtResource("3_glow")
-
-[node name="Sprite" type="Sprite2D" parent="."]
+[node name="Sprite" type="Sprite2D" parent="." unique_id=935163285]
 texture = ExtResource("2_frame")
 
-[node name="touch" type="Area2D" parent="."]
+[node name="touch" type="Area2D" parent="." unique_id=91391601]
 collision_layer = 0
 monitorable = false
 
-[node name="collider" type="CollisionShape2D" parent="touch"]
-position = Vector2(4, 2)
-shape = SubResource("CapsuleShape2D_touch")
+[node name="collider" type="CollisionShape2D" parent="touch" unique_id=894878406]
+position = Vector2(2, -16)
+shape = SubResource("CircleShape2D_sepl1")
