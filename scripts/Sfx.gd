@@ -29,6 +29,8 @@ const SOUNDS := {
 	"stone_clack": preload("res://sounds/stone_clack.wav"),
 	"tablet_reveal": preload("res://sounds/tablet_reveal.wav"),
 	"door_seal": preload("res://sounds/door_seal.wav"),
+	"heart_lub": preload("res://sounds/heart_lub.wav"),
+	"heart_dub": preload("res://sounds/heart_dub.wav"),
 }
 
 ## Cantidad de sonidos que pueden sonar a la vez.

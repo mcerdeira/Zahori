@@ -18,6 +18,10 @@ boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/show_image=false
 config/icon="res://icon.svg"
 
+[audio]
+
+buses/default_bus_layout="uid://c2n32bjjymc7y"
+
 [autoload]
 
 Global="*uid://vgjbrcqyc5gm"
@@ -26,6 +30,7 @@ Sfx="*res://scripts/Sfx.gd"
 Music="*res://scripts/Music.gd"
 Pause="*res://scripts/Pause.gd"
 DoorMaze="*res://scripts/DoorMaze.gd"
+Heartbeat="*res://scripts/Heartbeat.gd"
 
 [display]
 

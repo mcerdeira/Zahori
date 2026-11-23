@@ -10,12 +10,161 @@
 [ext_resource type="Texture2D" uid="uid://dwgnnpivnb0w4" path="res://sprites/water_sheet_spr.png" id="8_gonbc"]
 [ext_resource type="Texture2D" uid="uid://d28xeb4aidalq" path="res://sprites/floor_volcanic_spr_0.png" id="9_w4yos"]
 [ext_resource type="Texture2D" uid="uid://c5pxy6vr02xhk" path="res://sprites/floor_volcanic_top_spr_0.png" id="10_s352n"]
+[ext_resource type="Texture2D" uid="uid://colmgj2v544y4" path="res://sprites/floor_vine_alt_spr_0.png" id="11_h8q08"]
 [ext_resource type="Shader" uid="uid://y53i2lhrg154" path="res://scenes/fx.gdshader" id="11_rh1ks"]
+[ext_resource type="Texture2D" uid="uid://ckroeea06y7d4" path="res://sprites/floor_vine_vein_spr_0.png" id="12_gonbc"]
 [ext_resource type="PackedScene" uid="uid://8pofk8g1gd5i" path="res://scenes/door.tscn" id="12_is725"]
 [ext_resource type="PackedScene" uid="uid://bxu312q3urj6d" path="res://scenes/altar.tscn" id="13_niiem"]
 [ext_resource type="PackedScene" path="res://scenes/plant.tscn" id="14_l0vpe"]
 [ext_resource type="PackedScene" uid="uid://5k3e0pgoibm2" path="res://scenes/killerobj.tscn" id="15_2msgt"]
+[ext_resource type="Texture2D" uid="uid://cmy5uicvqw25s" path="res://sprites/floor_vine_spr_0.png" id="19_bqu3l"]
+[ext_resource type="Texture2D" uid="uid://di1n7g7k4pks5" path="res://sprites/floor_vine_top_spr_0.png" id="20_qmj78"]
 [ext_resource type="PackedScene" path="res://scenes/sealed_door.tscn" id="20_sealed"]
+[ext_resource type="Texture2D" uid="uid://jyrt46feieda" path="res://sprites/floor_vine_bottom_spr_0.png" id="21_6qdgt"]
+[ext_resource type="Texture2D" uid="uid://cy5fo43yb3chx" path="res://sprites/floor_vine_left_spr_0.png" id="22_h73bv"]
+[ext_resource type="Texture2D" uid="uid://dhsgawjyxm1wy" path="res://sprites/floor_vine_right_spr_0.png" id="23_hd8ke"]
+[ext_resource type="Texture2D" uid="uid://cowaxm40gycop" path="res://sprites/floor_vine_tl_spr_0.png" id="24_awsuc"]
+[ext_resource type="Texture2D" uid="uid://cfxq50kpwcdqw" path="res://sprites/floor_vine_tr_spr_0.png" id="25_gcj2q"]
+[ext_resource type="Texture2D" uid="uid://bppcq3fpmrw74" path="res://sprites/floor_vine_bl_spr_0.png" id="26_17kq7"]
+[ext_resource type="Texture2D" uid="uid://30t163fdd8ry" path="res://sprites/floor_vine_br_spr_0.png" id="27_qdopm"]
+[ext_resource type="Texture2D" uid="uid://dcogrqgbpt0p2" path="res://sprites/bg_vine_spr_0.png" id="28_dtmwi"]
+[ext_resource type="Texture2D" uid="uid://cwu1dl5l4323u" path="res://sprites/deco_vine_hang_spr_0.png" id="29_0nfdc"]
+[ext_resource type="Texture2D" uid="uid://cylxyxhdt1mae" path="res://sprites/deco_vine_hang_end_spr_0.png" id="30_ux3uw"]
+[ext_resource type="PackedScene" path="res://scenes/heartbeat.tscn" id="31_qmj78"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_40aok"]
+texture = ExtResource("3_l0vpe")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_biytn"]
+texture = ExtResource("4_2msgt")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0wui0"]
+texture = ExtResource("5_j2wox")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_m1dhn"]
+texture = ExtResource("19_bqu3l")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j04fq"]
+texture = ExtResource("11_h8q08")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fp4xa"]
+texture = ExtResource("12_gonbc")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rycmg"]
+texture = ExtResource("20_qmj78")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vp14y"]
+texture = ExtResource("21_6qdgt")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_f2ss1"]
+texture = ExtResource("22_h73bv")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dyhni"]
+texture = ExtResource("23_hd8ke")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_d21yj"]
+texture = ExtResource("24_awsuc")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qhbnm"]
+texture = ExtResource("25_gcj2q")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_38266"]
+texture = ExtResource("26_17kq7")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0mxyk"]
+texture = ExtResource("6_0lqje")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ese75"]
+texture = ExtResource("27_qdopm")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1l6um"]
+texture = ExtResource("28_dtmwi")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4qhh4"]
+texture = ExtResource("29_0nfdc")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vdcqx"]
+texture = ExtResource("30_ux3uw")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fu4mv"]
+texture = ExtResource("7_h8q08")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_7n2xa"]
+texture = ExtResource("8_gonbc")
+0:0/animation_columns = 2
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4dwer"]
+texture = ExtResource("9_w4yos")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhk5j"]
+texture = ExtResource("10_s352n")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSet" id="TileSet_w4qd4"]
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_40aok")
+sources/1 = SubResource("TileSetAtlasSource_biytn")
+sources/5 = SubResource("TileSetAtlasSource_7n2xa")
+sources/2 = SubResource("TileSetAtlasSource_0wui0")
+sources/3 = SubResource("TileSetAtlasSource_0mxyk")
+sources/4 = SubResource("TileSetAtlasSource_fu4mv")
+sources/6 = SubResource("TileSetAtlasSource_4dwer")
+sources/7 = SubResource("TileSetAtlasSource_mhk5j")
+sources/20 = SubResource("TileSetAtlasSource_m1dhn")
+sources/21 = SubResource("TileSetAtlasSource_j04fq")
+sources/22 = SubResource("TileSetAtlasSource_fp4xa")
+sources/23 = SubResource("TileSetAtlasSource_rycmg")
+sources/24 = SubResource("TileSetAtlasSource_vp14y")
+sources/25 = SubResource("TileSetAtlasSource_f2ss1")
+sources/26 = SubResource("TileSetAtlasSource_dyhni")
+sources/27 = SubResource("TileSetAtlasSource_d21yj")
+sources/28 = SubResource("TileSetAtlasSource_qhbnm")
+sources/29 = SubResource("TileSetAtlasSource_38266")
+sources/30 = SubResource("TileSetAtlasSource_ese75")
+sources/31 = SubResource("TileSetAtlasSource_1l6um")
+sources/32 = SubResource("TileSetAtlasSource_4qhh4")
+sources/33 = SubResource("TileSetAtlasSource_vdcqx")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jyhfs"]
 texture = ExtResource("3_l0vpe")
@@ -59,6 +208,16 @@ texture = ExtResource("10_s352n")
 0:0/0 = 0
 0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_w4yos"]
+texture = ExtResource("11_h8q08")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_s352n"]
+texture = ExtResource("12_gonbc")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
 [sub_resource type="TileSet" id="TileSet_jej6c"]
 physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_jyhfs")
@@ -69,6 +228,8 @@ sources/3 = SubResource("TileSetAtlasSource_y16s3")
 sources/4 = SubResource("TileSetAtlasSource_tqysk")
 sources/6 = SubResource("TileSetAtlasSource_d6wwt")
 sources/7 = SubResource("TileSetAtlasSource_aqg5f")
+sources/8 = SubResource("TileSetAtlasSource_w4yos")
+sources/9 = SubResource("TileSetAtlasSource_s352n")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_jyhfs"]
 shader = ExtResource("11_rh1ks")
@@ -80,11 +241,16 @@ script = ExtResource("1_j5hau")
 [node name="Camera2D" type="Camera2D" parent="." unique_id=880454566]
 anchor_mode = 0
 
+[node name="BackTiles" type="TileMapLayer" parent="." unique_id=1233470192]
+z_index = -4096
+tile_map_data = PackedByteArray("AAAeAAEAIAAAAAAAAAAeAAIAIAAAAAAAAAAbAAEAIAAAAAAAAAAbAAIAIAAAAAAAAAAbAAMAIAAAAAAAAAAbAAQAIAAAAAAAAAAbAAUAIQAAAAAAAAAeAAMAIQAAAAAAAAAaAAEAHwAAAAAAAAAaAAIAHwAAAAAAAAAaAAMAHwAAAAAAAAAcAAQAHwAAAAAAAAAcAAMAHwAAAAAAAAAcAAIAHwAAAAAAAAAcAAEAHwAAAAAAAAAdAAEAHwAAAAAAAAAfAAEAHwAAAAAAAAAgAAEAHwAAAAAAAAAhAAEAHwAAAAAAAAAiAAIAHwAAAAAAAAAiAAMAHwAAAAAAAAAiAAQAHwAAAAAAAAAiAAUAHwAAAAAAAAAiAAEAHwAAAAAAAAAdAAQAHwAAAAAAAAAZAAEAHwAAAAAAAAAaAAQAHwAAAAAAAAAaAAUAHwAAAAAAAAAaAAYAHwAAAAAAAAAbAAYAHwAAAAAAAAAcAAYAHwAAAAAAAAAcAAUAHwAAAAAAAAAdAAIAHwAAAAAAAAAdAAMAHwAAAAAAAAAfAAIAHwAAAAAAAAAfAAMAHwAAAAAAAAAfAAQAHwAAAAAAAAAeAAQAHwAAAAAAAAAgAAcAHwAAAAAAAAAfAAgAHwAAAAAAAAAfAAkAHwAAAAAAAAAfAAoAHwAAAAAAAAAgAAoAHwAAAAAAAAAhAAoAHwAAAAAAAAAiAAoAHwAAAAAAAAAiAAkAHwAAAAAAAAAiAAgAHwAAAAAAAAAiAAcAHwAAAAAAAAAjAAoAHwAAAAAAAAAkAAoAHwAAAAAAAAAkAAkAHwAAAAAAAAAkAAgAHwAAAAAAAAAkAAcAHwAAAAAAAAAkAAYAHwAAAAAAAAAkAAUAHwAAAAAAAAAkAAQAHwAAAAAAAAAkAAMAHwAAAAAAAAAkAAIAHwAAAAAAAAAkAAEAHwAAAAAAAAAkAAAAHwAAAAAAAAAkAP//HwAAAAAAAAAZAP//HwAAAAAAAAAaAP//HwAAAAAAAAAbAP//HwAAAAAAAAAcAP//HwAAAAAAAAAdAP//HwAAAAAAAAAeAP//HwAAAAAAAAAfAP//HwAAAAAAAAAgAP//HwAAAAAAAAAhAP//HwAAAAAAAAAiAP//HwAAAAAAAAAjAP//HwAAAAAAAAAiAAYAHwAAAAAAAAA=")
+tile_set = SubResource("TileSet_w4qd4")
+
 [node name="Player" parent="." unique_id=1897144092 instance=ExtResource("2_niiem")]
 position = Vector2(57, 120)
 
 [node name="LevelTiles" type="TileMapLayer" parent="." unique_id=921685684]
-tile_map_data = PackedByteArray("AAADAAgAAQAAAAAAAAAEAAgAAQAAAAAAAAAFAAgAAQAAAAAAAAAFAAkAAQAAAAAAAAAGAAkAAQAAAAAAAAABAAYAAQAAAAAAAAABAAUAAQAAAAAAAAABAAQAAQAAAAAAAAABAAMAAQAAAAAAAAABAAIAAQAAAAAAAAABAAEAAQAAAAAAAAACAAEAAQAAAAAAAAACAAAAAQAAAAAAAAADAAAAAQAAAAAAAAAEAAAAAQAAAAAAAAAIAAAAAQAAAAAAAAAJAAAAAQAAAAAAAAAKAAAAAQAAAAAAAAALAAAAAQAAAAAAAAAMAAAAAQAAAAAAAAANAAAAAQAAAAAAAAAOAAAAAQAAAAAAAAAFAAAAAQAAAAAAAAAGAAAAAQAAAAAAAAAHAAAAAQAAAAAAAAAjAAAAAQAAAAAAAAAiAAAAAQAAAAAAAAAhAAAAAQAAAAAAAAAUAAAAAQAAAAAAAAAVAAAAAQAAAAAAAAAWAAAAAQAAAAAAAAAXAAAAAQAAAAAAAAAYAAAAAQAAAAAAAAAZAAAAAQAAAAAAAAAgAAAAAQAAAAAAAAAfAAAAAQAAAAAAAAAeAAAAAQAAAAAAAAAdAAAAAQAAAAAAAAAcAAAAAQAAAAAAAAAbAAAAAQAAAAAAAAAaAAAAAQAAAAAAAAAPAAAAAQAAAAAAAAAQAAAAAQAAAAAAAAARAAAAAQAAAAAAAAASAAAAAQAAAAAAAAATAAAAAQAAAAAAAAAIAAkAAQAAAAAAAAALAAkAAQAAAAAAAAAOAAkAAQAAAAAAAAARAAkAAQAAAAAAAAAUAAkAAQAAAAAAAAAHAAkAAQAAAAAAAAAJAAkAAQAAAAAAAAAKAAkAAQAAAAAAAAAMAAkAAQAAAAAAAAANAAkAAQAAAAAAAAAPAAkAAQAAAAAAAAAQAAkAAQAAAAAAAAASAAkAAQAAAAAAAAATAAkAAQAAAAAAAAAhAAcAAQAAAAAAAAAhAAgAAQAAAAAAAAAhAAkAAQAAAAAAAAABAAcAAQAAAAAAAAACAAcAAQAAAAAAAAACAAgAAQAAAAAAAAAVAAkAAQAAAAAAAAAWAAkAAQAAAAAAAAAXAAkAAQAAAAAAAAAYAAEAAQAAAAAAAAAYAAIAAQAAAAAAAAAYAAMAAQAAAAAAAAAYAAQAAQAAAAAAAAAYAAUAAQAAAAAAAAAYAAYAAQAAAAAAAAAYAAcAAQAAAAAAAAAYAAkAAQAAAAAAAAAgAAkAAQAAAAAAAAAjAAEAAQAAAAAAAAAjAAIAAQAAAAAAAAAjAAMAAQAAAAAAAAAjAAQAAQAAAAAAAAAjAAUAAQAAAAAAAAAjAAYAAQAAAAAAAAAjAAcAAQAAAAAAAAAjAAgAAQAAAAAAAAAjAAkAAQAAAAAAAAA=")
+tile_map_data = PackedByteArray("AAADAAgAAQAAAAAAAAAEAAgAAQAAAAAAAAAFAAgAAQAAAAAAAAAFAAkAAQAAAAAAAAAGAAkAAQAAAAAAAAABAAYAAQAAAAAAAAABAAUAAQAAAAAAAAABAAQAAQAAAAAAAAABAAMAAQAAAAAAAAABAAIAAQAAAAAAAAABAAEAAQAAAAAAAAACAAEAAQAAAAAAAAACAAAAAQAAAAAAAAADAAAAAQAAAAAAAAAEAAAAAQAAAAAAAAAIAAAAAQAAAAAAAAAJAAAAAQAAAAAAAAAKAAAAAQAAAAAAAAALAAAAAQAAAAAAAAAMAAAAAQAAAAAAAAANAAAAAQAAAAAAAAAOAAAAAQAAAAAAAAAFAAAAAQAAAAAAAAAGAAAAAQAAAAAAAAAHAAAAAQAAAAAAAAAjAAAACAAAAAAAAAAiAAAACAAAAAAAAAAhAAAACAAAAAAAAAAUAAAAAQAAAAAAAAAVAAAAAQAAAAAAAAAWAAAAAQAAAAAAAAAXAAAAAQAAAAAAAAAYAAAAAQAAAAAAAAAZAAAACAAAAAAAAAAgAAAACAAAAAAAAAAfAAAACAAAAAAAAAAeAAAACAAAAAAAAAAdAAAACAAAAAAAAAAcAAAACAAAAAAAAAAbAAAACAAAAAAAAAAaAAAACAAAAAAAAAAPAAAAAQAAAAAAAAAQAAAAAQAAAAAAAAARAAAAAQAAAAAAAAASAAAAAQAAAAAAAAATAAAAAQAAAAAAAAAIAAkAAQAAAAAAAAALAAkAAQAAAAAAAAAOAAkAAQAAAAAAAAARAAkAAQAAAAAAAAAUAAkAAQAAAAAAAAAHAAkAAQAAAAAAAAAJAAkAAQAAAAAAAAAKAAkAAQAAAAAAAAAMAAkAAQAAAAAAAAANAAkAAQAAAAAAAAAPAAkAAQAAAAAAAAAQAAkAAQAAAAAAAAASAAkAAQAAAAAAAAATAAkAAQAAAAAAAAAhAAcACAAAAAAAAAAhAAgACAAAAAAAAAAhAAkACAAAAAAAAAABAAcAAQAAAAAAAAACAAcAAQAAAAAAAAACAAgAAQAAAAAAAAAVAAkAAQAAAAAAAAAWAAkAAQAAAAAAAAAXAAkAAQAAAAAAAAAYAAEAAQAAAAAAAAAYAAIAAQAAAAAAAAAYAAMAAQAAAAAAAAAYAAQAAQAAAAAAAAAYAAUAAQAAAAAAAAAYAAYAAQAAAAAAAAAYAAcAAQAAAAAAAAAYAAkAAQAAAAAAAAAgAAkACAAAAAAAAAAjAAEACAAAAAAAAAAjAAIACAAAAAAAAAAjAAMACAAAAAAAAAAjAAQACAAAAAAAAAAjAAUACAAAAAAAAAAjAAYACAAAAAAAAAAjAAcACAAAAAAAAAAjAAgACAAAAAAAAAAjAAkACAAAAAAAAAA=")
 tile_set = SubResource("TileSet_jej6c")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=57927670]
@@ -130,3 +296,7 @@ scale = Vector2(65, 1)
 
 [node name="SealedDoor" parent="." unique_id=1342555964 instance=ExtResource("20_sealed")]
 position = Vector2(57, 118)
+
+[node name="Heartbeat" parent="." unique_id=644957947 instance=ExtResource("31_qmj78")]
+position = Vector2(302, 39)
+intensity = 0.1
