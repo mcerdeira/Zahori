@@ -1,32 +1,25 @@
 extends Node2D
-## Evaporación del agua al activarse hydro (al entrar a una room o al prender
-## la habilidad). Primero el agua sigue visible hold_time segundos mientras
-## empieza a subir vapor; después se borran los tiles y una copia de ellos se
-## disuelve pixel a pixel, blanqueándose, entre más vapor.
-## Lo crea Global con setup(); se borra solo al terminar.
 
 const DISSOLVE_SHADER := preload("res://scenes/water_evaporation.gdshader")
 
-@export var hold_time: float = 1.0 # s que el agua se ve antes de evaporarse
-@export var dissolve_time: float = 0.8 # s que tarda la copia en desaparecer
-@export var steam_per_cell: float = 2.5 # partículas de vapor por celda (promedio)
-@export var steam_rise: float = 18.0 # px/s que sube el vapor
-@export var steam_life: float = 1.2 # s que dura cada partícula
+@export var hold_time: float = 1.0
+@export var dissolve_time: float = 0.8
+@export var steam_per_cell: float = 2.5
+@export var steam_rise: float = 18.0
+@export var steam_life: float = 1.2
 
 var _layer: TileMapLayer
-var _cells: Array = [] # [coords, source, atlas_coords, alternative]
+var _cells: Array = []
 var _time := 0.0
 var _erased := false
-var _steam: Array = [] # {pos: Vector2, life: float, max: float, size: int}
-var _copy: Node2D # dibuja la copia de los tiles con el shader de disolución
+var _steam: Array = []
+var _copy: Node2D
 var _copy_mat: ShaderMaterial
 var _spawn_acc := 0.0
-
 
 func setup(layer: TileMapLayer, cells: Array) -> void:
 	_layer = layer
 	_cells = cells
-
 
 func _ready() -> void:
 	z_index = 5
@@ -39,11 +32,9 @@ func _ready() -> void:
 	add_child(_copy)
 	Sfx.play("hiss", randf_range(0.95, 1.05))
 
-
 func _process(delta: float) -> void:
 	_time += delta
 	if not _erased and _time >= hold_time:
-		# Si hydro se apagó mientras tanto, Global ya restauró el agua: abortar
 		if not _layer.has_meta(Global.HIDDEN_WATER_META):
 			queue_free()
 			return
@@ -53,12 +44,11 @@ func _process(delta: float) -> void:
 			_layer.erase_cell(c[0])
 		_copy.visible = true
 		_copy.queue_redraw()
-		_burst(3.0) # bocanada de vapor al evaporarse
+		_burst(3.0)
 	if _erased:
 		var p := clampf((_time - hold_time) / dissolve_time, 0.0, 1.0)
 		_copy_mat.set_shader_parameter("progress", p)
 
-	# Vapor: arranca de a poco durante la espera y sigue un rato al disolverse
 	var emitting := _time < hold_time + dissolve_time * 0.7
 	if emitting:
 		var rate := steam_per_cell * _cells.size() * (0.6 if not _erased else 1.5)
@@ -74,11 +64,9 @@ func _process(delta: float) -> void:
 	if not emitting and _steam.is_empty() and _time >= hold_time + dissolve_time:
 		queue_free()
 
-
 func _burst(per_cell: float) -> void:
 	for i in int(_cells.size() * per_cell):
 		_spawn_steam()
-
 
 func _spawn_steam() -> void:
 	var c: Array = _cells.pick_random()
@@ -92,7 +80,6 @@ func _spawn_steam() -> void:
 		phase = randf() * TAU,
 	})
 
-
 func _draw() -> void:
 	for s in _steam:
 		var k: float = s.life / s.max
@@ -100,8 +87,6 @@ func _draw() -> void:
 		var col := Color(0.85, 0.95, 1.0, a)
 		draw_rect(Rect2(s.pos.round(), Vector2.ONE * s.size), col)
 
-
-## Copia estática de los tiles (primer frame del atlas) para disolverla.
 func _draw_copy() -> void:
 	for c in _cells:
 		var src := _layer.tile_set.get_source(c[1]) as TileSetAtlasSource

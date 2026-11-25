@@ -1,14 +1,11 @@
 shader_type spatial;
-// Piedra de la tableta coleccionable: textura sin filtrar y luz en escalones
-// (pocos tonos, estilo pixel art). La luz se calcula a mano en espacio de vista:
-// como la cámara no se mueve, queda fija mientras la tableta gira.
 render_mode unshaded, cull_disabled;
 
 uniform sampler2D tex : source_color, filter_nearest, repeat_enable;
-uniform vec3 light_dir = vec3(-0.4, 0.5, 0.77); // hacia la luz, en espacio de vista
-uniform float ambient = 0.42;   // brillo de las caras en sombra
-uniform float highlight = 1.08; // brillo de las caras de frente a la luz
-uniform float steps = 3.0;      // cantidad de escalones de luz
+uniform vec3 light_dir = vec3(-0.4, 0.5, 0.77);
+uniform float ambient = 0.42;
+uniform float highlight = 1.08;
+uniform float steps = 3.0;
 
 varying vec3 v_normal;
 

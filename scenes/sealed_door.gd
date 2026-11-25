@@ -1,11 +1,4 @@
 extends Area2D
-## Puerta sellada: decorativa, marca por dónde se entró a una room de la que ya no
-## se puede volver (p. ej. level182, al salir del laberinto de puertas).
-## Al llegar a la room se ve un instante como una puerta normal (titilando) y se
-## cierra de golpe: queda de piedra con enredaderas, suena `door_seal`, se sacude y
-## levanta polvo. Si la room se recarga porque el player murió, ya aparece cerrada.
-## Apretar UP delante sólo da un golpe sordo: no lleva a ningún lado.
-## No está en el grupo `doors`: no cuenta para los spawns ni para los tools.
 
 const OPEN_FRAMES: Array[Texture2D] = [
 	preload("res://sprites/door1.png"),
@@ -15,10 +8,10 @@ const OPEN_FRAMES: Array[Texture2D] = [
 ]
 const SEALED := preload("res://sprites/door_sealed_spr_0.png")
 
-@export var open_time: float = 0.6     # segundos que se ve abierta antes de cerrarse
-@export var open_fps: float = 15.0     # frames/s del titileo de puerta abierta (como door.tscn)
-@export var shake_px: float = 2.0      # px de la sacudida al cerrarse
-@export var dust_amount: int = 14      # partículas de polvo al cerrarse
+@export var open_time: float = 0.6
+@export var open_fps: float = 15.0
+@export var shake_px: float = 2.0
+@export var dust_amount: int = 14
 
 var _player: Node = null
 var _closed_on_load := false
@@ -26,12 +19,8 @@ var _busy := false
 
 @onready var _sprite: Sprite2D = $sprite
 
-
 func _enter_tree() -> void:
-	# Antes de cualquier _ready (el player consume este flag en el suyo): si se está
-	# recargando la room por una muerte, la puerta ya estaba cerrada.
 	_closed_on_load = Global.respawn_grace_pending
-
 
 func _ready() -> void:
 	body_entered.connect(func(b): if b.has_method("can_interact"): _player = b)
@@ -41,13 +30,10 @@ func _ready() -> void:
 		return
 	_play_closing()
 
-
 func _process(_delta: float) -> void:
 	if _player and not _busy and Input.is_action_just_pressed("UP") and _player.can_interact():
 		_knock()
 
-
-## Titila como puerta abierta un momento y se cierra de golpe.
 func _play_closing() -> void:
 	_busy = true
 	var t := 0.0
@@ -61,14 +47,11 @@ func _play_closing() -> void:
 	await _shake(shake_px, 6)
 	_busy = false
 
-
-## UP delante de la puerta sellada: golpe sordo y una sacudida chiquita.
 func _knock() -> void:
 	_busy = true
 	Sfx.play("door_seal", 1.7, -9.0)
 	await _shake(1.0, 3)
 	_busy = false
-
 
 func _shake(amount: float, steps: int) -> void:
 	var tw := create_tween()
@@ -78,8 +61,6 @@ func _shake(amount: float, steps: int) -> void:
 	tw.tween_property(_sprite, "position:x", 0.0, 0.03)
 	await tw.finished
 
-
-## Polvo que cae de arriba de la puerta y se desparrama por el piso.
 func _dust() -> void:
 	var p := CPUParticles2D.new()
 	p.one_shot = true

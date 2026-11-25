@@ -1,18 +1,11 @@
 extends Node
 
-## Opciones del jugador: volúmenes, pantalla completa y teclas.
-## Se guardan en user://settings.cfg y se aplican al arrancar el juego.
-## Cada acción tiene dos teclas (primaria y alternativa); por default funcionan
-## a la vez las flechas + Z/X y WASD + J/K.
-
 signal changed
 
 const PATH := "user://settings.cfg"
 
-## Buses que se pueden regular desde el menú, en el orden en que se muestran.
 const BUSES: Array[StringName] = [&"Master", &"Music", &"SFX"]
 
-## Acciones remapeables, en el orden en que se muestran, con su nombre visible.
 const ACTIONS: Array[StringName] = [&"LEFT", &"RIGHT", &"UP", &"DOWN", &"action", &"shoot", &"pause"]
 const ACTION_NAMES := {
 	&"LEFT": "LEFT",
@@ -23,7 +16,6 @@ const ACTION_NAMES := {
 	&"shoot": "ACTION 2",
 	&"pause": "PAUSE",
 }
-## Teclas por default (physical keycodes): [primaria, alternativa].
 const DEFAULT_KEYS := {
 	&"LEFT": [KEY_LEFT, KEY_A],
 	&"RIGHT": [KEY_RIGHT, KEY_D],
@@ -33,22 +25,16 @@ const DEFAULT_KEYS := {
 	&"shoot": [KEY_X, KEY_K],
 	&"pause": [KEY_Q, KEY_P],
 }
-## Teclas que no se pueden asignar (las usan los menús para cancelar/salir).
 const RESERVED_KEYS: Array[int] = [KEY_ESCAPE]
 
-## Tamaño de la ventana en modo ventana (múltiplo de la resolución base 576x324).
 @export var windowed_scale: int = 2
 
-## Volumen de cada bus, lineal de 0 a 1 (1 = el volumen original del bus).
 var volumes := {}
-## Factor temporal sobre Master (lo baja el menú de pausa); no se guarda.
 var master_duck := 1.0
 var fullscreen := true
-## Acción -> [keycode primario, keycode alternativo] (0 = sin tecla).
 var keys := {}
 
-var _base_db := {} # volumen original de cada bus en default_bus_layout.tres (dB)
-
+var _base_db := {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -59,12 +45,10 @@ func _ready() -> void:
 	_load()
 	apply_all()
 
-
 func _reset_keys() -> void:
 	keys.clear()
 	for a in ACTIONS:
 		keys[a] = (DEFAULT_KEYS[a] as Array).duplicate()
-
 
 func apply_all() -> void:
 	for bus in BUSES:
@@ -73,20 +57,14 @@ func apply_all() -> void:
 	for a in ACTIONS:
 		_apply_action(a)
 
-
-# --- Audio ----------------------------------------------------------------------
-
 func set_volume(bus: StringName, value: float) -> void:
 	volumes[bus] = clampf(value, 0.0, 1.0)
 	_apply_volume(bus)
 	save()
 
-
-## Baja temporalmente el Master (1 = normal), sin tocar el volumen elegido.
 func set_master_duck(factor: float) -> void:
 	master_duck = factor
 	_apply_volume(&"Master")
-
 
 func _apply_volume(bus: StringName) -> void:
 	var idx := AudioServer.get_bus_index(bus)
@@ -96,14 +74,10 @@ func _apply_volume(bus: StringName) -> void:
 	AudioServer.set_bus_mute(idx, v <= 0.001)
 	AudioServer.set_bus_volume_db(idx, _base_db[bus] + linear_to_db(maxf(v, 0.001)))
 
-
-# --- Pantalla -------------------------------------------------------------------
-
 func set_fullscreen(value: bool) -> void:
 	fullscreen = value
 	_apply_window()
 	save()
-
 
 func _apply_window() -> void:
 	if fullscreen:
@@ -116,12 +90,6 @@ func _apply_window() -> void:
 	DisplayServer.window_set_size(size)
 	DisplayServer.window_set_position(usable.position + (usable.size - size) / 2)
 
-
-# --- Teclas ---------------------------------------------------------------------
-
-## Asigna `keycode` a la acción en el slot dado (0 primario, 1 alternativo).
-## Si la tecla ya la usaba otra acción (u otro slot), ahí queda la tecla que
-## se reemplazó, así nunca hay dos acciones con la misma tecla.
 func bind_key(action: StringName, slot: int, keycode: int) -> void:
 	var previous: int = keys[action][slot]
 	for a in ACTIONS:
@@ -134,13 +102,11 @@ func bind_key(action: StringName, slot: int, keycode: int) -> void:
 	save()
 	changed.emit()
 
-
 func clear_key(action: StringName, slot: int) -> void:
 	keys[action][slot] = 0
 	_apply_action(action)
 	save()
 	changed.emit()
-
 
 func reset_keys() -> void:
 	_reset_keys()
@@ -148,7 +114,6 @@ func reset_keys() -> void:
 		_apply_action(a)
 	save()
 	changed.emit()
-
 
 func _apply_action(action: StringName) -> void:
 	InputMap.action_erase_events(action)
@@ -159,17 +124,12 @@ func _apply_action(action: StringName) -> void:
 		ev.physical_keycode = keycode
 		InputMap.action_add_event(action, ev)
 
-
-## Nombre visible de una tecla según la distribución del teclado ("---" si no hay).
 static func key_name(keycode: int) -> String:
 	if keycode == 0:
 		return "---"
 	var label := DisplayServer.keyboard_get_keycode_from_physical(keycode)
 	var text := OS.get_keycode_string(label if label != KEY_NONE else keycode)
 	return text.to_upper()
-
-
-# --- Guardado -------------------------------------------------------------------
 
 func save() -> void:
 	var cfg := ConfigFile.new()
@@ -179,7 +139,6 @@ func save() -> void:
 	for a in ACTIONS:
 		cfg.set_value("keys", a, keys[a])
 	cfg.save(PATH)
-
 
 func _load() -> void:
 	var cfg := ConfigFile.new()

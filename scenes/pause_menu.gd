@@ -1,8 +1,4 @@
 extends CanvasLayer
-## Pantalla de pausa con el estilo del monitor de las terminales:
-## CONTINUE / SETTINGS / TABLET / QUIT (QUIT vuelve al menú de título).
-## TABLET (la tableta de piedra coleccionable) sólo aparece con algún fragmento.
-## UP/DOWN eligen, `action` o ENTER confirman; Q o ESC continúan.
 
 signal closed
 
@@ -11,9 +7,9 @@ const TABLET_SCENE := preload("res://scenes/tablet_viewer.tscn")
 const TITLE_SCENE := "res://scenes/Title.tscn"
 const INK := Color(0.55, 0.88, 1, 1)
 
-@export var power_on_time: float = 0.25 # segundos de la animación de encendido
-@export var power_off_time: float = 0.2 # segundos de la animación de apagado
-@export var led_blink: float = 0.6      # segundos por estado del LED
+@export var power_on_time: float = 0.25
+@export var power_off_time: float = 0.2
+@export var led_blink: float = 0.6
 
 @onready var dim: ColorRect = $dim
 @onready var monitor: Control = $monitor
@@ -25,10 +21,9 @@ const INK := Color(0.55, 0.88, 1, 1)
 var _selected := 0
 var _closing := false
 var _options: Array[String] = ["CONTINUE", "SETTINGS", "QUIT"]
-var _submenu: Node = null # settings o tableta abiertos encima
+var _submenu: Node = null
 var _labels: Array[Label] = []
 var _highlight := StyleBoxFlat.new()
-
 
 func _ready() -> void:
 	get_tree().paused = true
@@ -39,7 +34,6 @@ func _ready() -> void:
 	_highlight.content_margin_right = 2
 	if Global.tablet_piece_count() > 0:
 		_options.insert(2, "TABLET")
-		# Con 4 opciones se aprietan un poco para no pisar la barra de estado
 		options_box.offset_top -= 4
 		options_box.add_theme_constant_override(&"separation", 3)
 	for option in _options:
@@ -52,7 +46,6 @@ func _ready() -> void:
 	_refresh()
 	Sfx.play("term_on")
 
-	# Encendido del tubo, igual que la terminal
 	dim.modulate.a = 0.0
 	monitor.modulate.a = 0.0
 	screen_rect.scale = Vector2(1.0, 0.02)
@@ -65,7 +58,6 @@ func _ready() -> void:
 	var blink := create_tween().set_loops()
 	blink.tween_interval(led_blink)
 	blink.tween_callback(func(): led.visible = not led.visible)
-
 
 func _input(event: InputEvent) -> void:
 	if _closing or _submenu:
@@ -91,14 +83,11 @@ func _input(event: InputEvent) -> void:
 				_quit_to_title()
 	get_viewport().set_input_as_handled()
 
-
 func _open_submenu(scene: PackedScene) -> void:
 	_submenu = scene.instantiate()
 	_submenu.closed.connect(func(): _submenu = null)
 	add_child(_submenu)
 
-
-## La opción elegida va en negativo (fondo cian, letra negra), como la barra de estado.
 func _refresh() -> void:
 	for i in _labels.size():
 		var l := _labels[i]
@@ -109,15 +98,11 @@ func _refresh() -> void:
 			l.remove_theme_stylebox_override("normal")
 			l.remove_theme_color_override("font_color")
 
-
-## Apaga el monitor, despausa y vuelve al menú de título.
 func _quit_to_title() -> void:
 	Music.stop_main_theme(0.6)
 	Global.discard_pending_tablet_pieces()
 	_close(func(): get_tree().change_scene_to_file(TITLE_SCENE))
 
-
-## Apaga el monitor y despausa. `after` se llama al terminar (ya despausado).
 func _close(after := Callable()) -> void:
 	_closing = true
 	Sfx.play("term_off")

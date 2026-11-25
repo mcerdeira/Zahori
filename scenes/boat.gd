@@ -1,37 +1,26 @@
 extends CharacterBody2D
-## Canoa. Flota sobre los nodos Water (grupo "water") mientras el agua esté
-## (Global.water_active); si no hay agua debajo cae hasta un tile, y si cae al
-## vacío se borra al rato de salir de pantalla.
-## El player, parado arriba y con el bote frenado, la lanza hacia un costado
-## (player.gd llama a launch); avanza sola hasta chocar contra algo.
-## Se mueve a mano (body_test_motion) excluyendo al player, así el player
-## parado arriba no la frena. Al ser un cuerpo kinematic, el player parado
-## encima hereda su velocidad como plataforma y viaja con ella.
 
-@export var speed: float = 80.0 # px/s al avanzar
-@export var max_fall_speed: float = 240.0 # px/s
-@export var waterline: float = 5.0 # px desde el origen del bote hasta la línea de flotación
-@export var offscreen_time: float = 1.2 # s fuera de pantalla cayendo antes de borrarse
-@export var bob_amplitude: float = 1.0 # px que sube y baja flotando sola
-@export var bob_period: float = 1.8 # s de un ciclo completo del vaivén
-@export var bob_fade: float = 4.0 # 1/s, qué tan rápido entra/sale el vaivén
+@export var speed: float = 80.0
+@export var max_fall_speed: float = 240.0
+@export var waterline: float = 5.0
+@export var offscreen_time: float = 1.2
+@export var bob_amplitude: float = 1.0
+@export var bob_period: float = 1.8
+@export var bob_fade: float = 4.0
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
-var _dir := 0 # -1 / 1 mientras avanza, 0 frenado
+var _dir := 0
 var _vy := 0.0
 var _falling := false
 var _offscreen := 0.0
 var _notifier: VisibleOnScreenNotifier2D
-var _bob_t := 0.0 # s, fase del vaivén
-var _bob_weight := 0.0 # 0..1, cuánto vaivén se aplica (para que entre y salga suave)
+var _bob_t := 0.0
+var _bob_weight := 0.0
 var _floating := false
-
 
 func _enter_tree() -> void:
 	add_to_group("boat")
 
-
-## Pone el bote justo debajo de unos pies (y global de la planta del player).
 func place_under(feet: Vector2) -> void:
 	var shape := $collider.shape as RectangleShape2D
 	var top: float = $collider.position.y - shape.size.y / 2.0
@@ -39,31 +28,23 @@ func place_under(feet: Vector2) -> void:
 	_dir = 0
 	_vy = 0.0
 
-
-## Pone el bote en pos (global) frenado, como si arrancara ahí la room.
 func place_at(pos: Vector2) -> void:
 	global_position = pos
 	_dir = 0
 	_vy = 0.0
 
-
 func _ready() -> void:
 	_notifier = VisibleOnScreenNotifier2D.new()
 	_notifier.rect = Rect2(-16, -8, 32, 16)
 	add_child(_notifier)
-	_bob_t = randf() * bob_period # que dos botes no se muevan sincronizados
-
+	_bob_t = randf() * bob_period
 
 func is_moving() -> bool:
 	return _dir != 0
 
-
-## true si hay lugar para avanzar en esa dirección.
 func can_move(dir: int) -> bool:
 	return not _test(Vector2(dir, 0), null)
 
-
-## Arranca hacia dir (-1 / 1). Sólo si está frenado y hay lugar.
 func launch(dir: int) -> bool:
 	if _dir != 0 or dir == 0 or not can_move(dir):
 		return false
@@ -71,13 +52,11 @@ func launch(dir: int) -> bool:
 	Sfx.play("step", 0.6)
 	return true
 
-
 func _physics_process(delta: float) -> void:
 	var surface := _water_surface()
 	_falling = false
 	_floating = false
 	if not is_nan(surface):
-		# Flotando (o cayendo hacia el agua): se clava en la línea de flotación
 		var target := surface - waterline
 		if global_position.y < target:
 			_vy = minf(_vy + gravity * delta, max_fall_speed)
@@ -94,9 +73,8 @@ func _physics_process(delta: float) -> void:
 			_falling = true
 
 	if _dir != 0 and _move(Vector2(_dir * speed * delta, 0)):
-		_dir = 0 # chocó: queda frenado
+		_dir = 0
 
-	# Cayendo al vacío: se borra al rato de salir de pantalla
 	if _falling and not _notifier.is_on_screen():
 		_offscreen += delta
 		if _offscreen >= offscreen_time:
@@ -104,30 +82,22 @@ func _physics_process(delta: float) -> void:
 	else:
 		_offscreen = 0.0
 
-
 func _process(delta: float) -> void:
 	_update_bob(delta)
 
-
-## Vaivén del agua: sólo visual (mueve el sprite, no el collider), y sólo flotando
-## quieta y sin nadie encima. Al subirse el player se apaga suave.
 func _update_bob(delta: float) -> void:
 	var active := _floating and _dir == 0 and not _has_rider()
 	_bob_weight = move_toward(_bob_weight, 1.0 if active else 0.0, bob_fade * delta)
 	_bob_t = fmod(_bob_t + delta, bob_period)
 	var y := sin(_bob_t / bob_period * TAU) * bob_amplitude * _bob_weight
-	$sprite.position.y = roundf(y) # px enteros, pixel art
+	$sprite.position.y = roundf(y)
 
-
-## true si algún player está parado sobre el bote.
 func _has_rider() -> bool:
 	for p in get_tree().get_nodes_in_group("player"):
 		if p.has_method("floor_boat") and p.floor_boat() == self:
 			return true
 	return false
 
-
-## Superficie (y global) del agua sobre la que flota, o NAN si no hay.
 func _water_surface() -> float:
 	if not Global.water_active:
 		return NAN
@@ -136,21 +106,17 @@ func _water_surface() -> float:
 		var r: Rect2 = w.get_rect()
 		if global_position.x < r.position.x or global_position.x > r.end.x:
 			continue
-		# Sólo si el bote está por encima de la superficie (o apenas debajo)
 		if global_position.y > r.position.y - waterline + 1.0:
 			continue
 		if is_nan(best) or r.position.y < best:
 			best = r.position.y
 	return best
 
-
-## Mueve el bote hasta donde pueda. Devuelve true si chocó.
 func _move(motion: Vector2) -> bool:
 	var result := PhysicsTestMotionResult2D.new()
 	var hit := _test(motion, result)
 	global_position += result.get_travel()
 	return hit
-
 
 func _test(motion: Vector2, result: PhysicsTestMotionResult2D) -> bool:
 	var params := PhysicsTestMotionParameters2D.new()

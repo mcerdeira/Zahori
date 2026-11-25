@@ -1,21 +1,14 @@
 extends Node
 
-## Menú de pausa (Q). Sólo se abre dentro del juego (rooms), no en las intros,
-## y no si el juego ya está pausado (p. ej. con una terminal abierta).
-## El menú cuelga de este autoload, así sobrevive si la escena cambia por debajo.
-
 const MENU_SCENE := preload("res://scenes/pause_menu.tscn")
 const ROOMS_DIR := "res://scenes/rooms/"
 
-## Cuánto baja el volumen del bus Master mientras está en pausa (0.6 = 60%).
 @export var volume_drop: float = 0.6
 
 var _menu: Node = null
 
-
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _menu or not event.is_action_pressed("pause") or get_tree().paused:
@@ -26,13 +19,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 	_open()
 
-
 func _open() -> void:
 	Settings.set_master_duck(1.0 - volume_drop)
 	_menu = MENU_SCENE.instantiate()
 	_menu.closed.connect(_on_closed)
 	add_child(_menu)
-
 
 func _on_closed() -> void:
 	Settings.set_master_duck(1.0)

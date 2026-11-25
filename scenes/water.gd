@@ -12,7 +12,6 @@ func _on_body_entered(body: Node) -> void:
 	if body.has_method("die"):
 		body.die()
 
-## Rect global del agua (el nodo suele estar escalado para cubrir la pileta).
 func get_rect() -> Rect2:
 	var shape := $collider.shape as RectangleShape2D
 	var half := shape.size / 2.0

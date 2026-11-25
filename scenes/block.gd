@@ -3,7 +3,7 @@ extends StaticBody2D
 @export var vanish_time: float = 0.2
 
 func _enter_tree() -> void:
-	add_to_group("blocks") # la enredadera los busca para comérselos
+	add_to_group("blocks")
 
 func vanish() -> void:
 	var tween := create_tween()

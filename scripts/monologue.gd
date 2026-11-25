@@ -1,30 +1,20 @@
 extends Node
 
-## Monólogo del protagonista: el texto aparece letra por letra y cada letra
-## dispara una sílaba de una voz sintética con fonemas inventados
-## (sounds/voice_*.wav, generados con tools/gen_sfx.py), así quedan sincronizados.
-## ui_accept completa la línea, o pasa a la siguiente si ya estaba completa.
-##
-## Base para Intro2 (que cambia de escena al terminar) y para el overlay que se
-## abre dentro de una room (scenes/monologue_overlay.gd). Necesita un hijo
-## RichTextLabel con bbcode. Al terminar llama a _finish() (por defecto, emite finished).
-
 signal finished
 
 const VOWELS := "aeiou"
-## Consonantes "suaves": arrancan con ataque nasal; el resto, con ataque explosivo.
 const SOFT_CONSONANTS := "lmnrvwyhj"
 
 @export var lines: Array[String] = []
-@export var autostart: bool = true       # false: arranca cuando se llama a start()
-@export var char_interval: float = 0.075 # segundos entre cada letra
-@export var comma_pause: float = 0.35    # segundos extra tras una coma
-@export var dot_pause: float = 0.3       # segundos extra tras cada punto
-@export var hold_time: float = 2.5       # segundos que queda la línea completa antes de seguir
-@export var fade_time: float = 0.6       # segundos del fundido entre líneas
-@export var pitch_start: float = 1.0     # tono al principio de cada línea
-@export var pitch_end: float = 0.86      # tono al final (cae, como cerrando la frase)
-@export var pitch_jitter: float = 0.04   # variación aleatoria del tono por sílaba
+@export var autostart: bool = true
+@export var char_interval: float = 0.075
+@export var comma_pause: float = 0.35
+@export var dot_pause: float = 0.3
+@export var hold_time: float = 2.5
+@export var fade_time: float = 0.6
+@export var pitch_start: float = 1.0
+@export var pitch_end: float = 0.86
+@export var pitch_jitter: float = 0.04
 @export var voice_volume_db: float = -2.0
 
 var _line := -1
@@ -32,13 +22,12 @@ var _timer := 0.0
 var _holding := false
 var _fading := false
 var _running := false
-var _text := "" # texto plano de la línea actual (sin bbcode)
+var _text := ""
 var _voices: Array[AudioStreamPlayer] = []
 var _next_voice := 0
 var _syllables := {}
 
 @onready var label: RichTextLabel = $RichTextLabel
-
 
 func _ready() -> void:
 	for onset in ["", "m", "k"]:
@@ -54,17 +43,13 @@ func _ready() -> void:
 	if autostart:
 		start()
 
-
 func start() -> void:
 	_running = true
 	_line = -1
 	_next_line()
 
-
-## Se llama al terminar la última línea.
 func _finish() -> void:
 	finished.emit()
-
 
 func _process(delta: float) -> void:
 	if not _running or _fading:
@@ -73,7 +58,7 @@ func _process(delta: float) -> void:
 		if _holding:
 			_next_line()
 		else:
-			label.visible_characters = -1 # completar la línea de golpe
+			label.visible_characters = -1
 			_holding = true
 			_timer = hold_time
 		return
@@ -84,7 +69,6 @@ func _process(delta: float) -> void:
 		return
 	while _timer <= 0.0 and not _holding:
 		_reveal_next_char()
-
 
 func _next_line() -> void:
 	_line += 1
@@ -103,8 +87,7 @@ func _next_line() -> void:
 	label.modulate.a = 1.0
 	_holding = false
 	_fading = false
-	_timer = 0.6 # pequeña pausa antes de empezar a hablar
-
+	_timer = 0.6
 
 func _reveal_next_char() -> void:
 	var i := label.visible_characters
@@ -123,12 +106,9 @@ func _reveal_next_char() -> void:
 		_:
 			_speak(c.to_lower(), float(i) / _text.length())
 
-
-## Una sílaba por letra: las vocales suenan solas; cada consonante elige
-## siempre la misma vocal (idioma inventado pero consistente) con su ataque.
 func _speak(c: String, progress: float) -> void:
 	if c < "a" or c > "z":
-		return # espacios y otros signos no suenan
+		return
 	var key: String
 	if c in VOWELS:
 		key = c

@@ -1,8 +1,4 @@
 extends CanvasLayer
-## Lo que pasa al tocar el corazón: pausa el juego y pregunta si trascender
-## (YES: final `transcend`, NO: final `destroy`). Con los 4 fragmentos de la tableta
-## no pregunta nada y va directo al mejor final (`awaken`). El corazón sigue latiendo
-## de fondo hasta que la pantalla queda en negro y se pasa a Ending.tscn.
 
 const ENDING_SCENE := "res://scenes/Ending.tscn"
 const FONT := preload("res://fonts/prstartk.ttf")
@@ -13,11 +9,11 @@ const INK := Color(0.95, 0.95, 0.97)
 const DIM := Color(0.42, 0.43, 0.48)
 const ACCENT := Color(1.0, 0.78, 0.42)
 
-@export var dim_alpha: float = 0.82    # opacidad del fondo mientras pregunta (0..1)
-@export var dim_time: float = 0.8      # segundos del oscurecido inicial
-@export var input_delay: float = 0.6   # segundos sin aceptar teclas tras aparecer la pregunta
-@export var leave_time: float = 1.8    # segundos del fundido a negro al elegir
-@export var options_gap: float = 96.0  # px entre las dos opciones
+@export var dim_alpha: float = 0.82
+@export var dim_time: float = 0.8
+@export var input_delay: float = 0.6
+@export var leave_time: float = 1.8
+@export var options_gap: float = 96.0
 
 var _selected := 0
 var _accepting := false
@@ -28,11 +24,10 @@ var _time := 0.0
 @onready var _question: Label = $question
 @onready var _ui: Control = $ui
 
-
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = true
-	Heartbeat.process_mode = Node.PROCESS_MODE_ALWAYS # que no se detenga con la pausa
+	Heartbeat.process_mode = Node.PROCESS_MODE_ALWAYS
 	_ui.draw.connect(_draw_options)
 	_bg.modulate.a = 0.0
 	_question.modulate.a = 0.0
@@ -47,15 +42,12 @@ func _ready() -> void:
 	tw.tween_interval(input_delay)
 	tw.tween_callback(func(): _accepting = true)
 
-
 func _exit_tree() -> void:
 	Heartbeat.process_mode = Node.PROCESS_MODE_INHERIT
-
 
 func _process(delta: float) -> void:
 	_time += delta
 	_ui.queue_redraw()
-
 
 func _input(event: InputEvent) -> void:
 	if not _accepting or _leaving:
@@ -68,15 +60,12 @@ func _input(event: InputEvent) -> void:
 		Sfx.play("term_ok")
 		_leave(ENDINGS[_selected])
 
-
 func _pressed(event: InputEvent, actions: Array) -> bool:
 	for a in actions:
 		if InputMap.has_action(a) and event.is_action_pressed(a):
 			return true
 	return false
 
-
-## Funde a negro y pasa a la escena del final. Ending.tscn saca la pausa al arrancar.
 func _leave(ending: StringName) -> void:
 	_leaving = true
 	Global.ending = ending
@@ -88,7 +77,6 @@ func _leave(ending: StringName) -> void:
 	tw.tween_callback(func():
 		get_tree().change_scene_to_file(ENDING_SCENE)
 		queue_free())
-
 
 func _draw_options() -> void:
 	var center := Vector2(_ui.size.x / 2.0, _ui.size.y * 0.62)

@@ -1,20 +1,12 @@
 extends CanvasLayer
-## Monitor de terminal que abre el altar. Pausa el juego mientras está abierto
-## y se cierra con ESC (ui_cancel). Con `action` o ENTER se saltea el tipeo del sistema.
-## La pantalla vive en un SubViewport (para el shader CRT), así que el input
-## de teclado se le reenvía a mano.
-
 signal closed
-## El jugador descifró el glifo del altar.
 signal solved(altar_number: int)
 
-@export var power_on_time: float = 0.25 # segundos de la animación de encendido
-@export var power_off_time: float = 0.2 # segundos de la animación de apagado
-@export var led_blink: float = 0.6      # segundos por estado del LED
+@export var power_on_time: float = 0.25
+@export var power_off_time: float = 0.2
+@export var led_blink: float = 0.6
 
-## Lo setea el altar antes de agregar la terminal al árbol.
 var altar_number := 1
-## true si lo abre un altar de pistas (muestra el texto en vez del glifo).
 var is_hint := false
 
 @onready var dim: ColorRect = $dim
@@ -26,12 +18,9 @@ var is_hint := false
 
 var _closing := false
 
-
 func _enter_tree() -> void:
-	# Antes del _ready de la pantalla, que arma la barra de estado con el número
 	$monitor/screen/viewport/content.altar_number = altar_number
 	$monitor/screen/viewport/content.is_hint = is_hint
-
 
 func _ready() -> void:
 	get_tree().paused = true
@@ -40,7 +29,6 @@ func _ready() -> void:
 	screen.solved.connect(func(): solved.emit(altar_number))
 	Sfx.play("term_on")
 
-	# Encendido del tubo: aparece una línea horizontal que se abre hacia arriba y abajo
 	dim.modulate.a = 0.0
 	monitor.modulate.a = 0.0
 	screen_rect.scale = Vector2(1.0, 0.02)
@@ -55,22 +43,18 @@ func _ready() -> void:
 	blink.tween_interval(led_blink)
 	blink.tween_callback(func(): led.visible = not led.visible)
 
-
 func _input(event: InputEvent) -> void:
 	if _closing:
 		return
 	if event.is_action_pressed("ui_cancel"):
 		close()
 	elif screen.is_busy():
-		# Mientras el sistema escribe el teclado no tipea; `action` o ENTER saltean
 		if event.is_action_pressed("action") or event.is_action_pressed("ui_accept"):
 			screen.skip()
 	else:
 		viewport.push_input(event)
 	get_viewport().set_input_as_handled()
 
-
-## Apaga el monitor (se colapsa a una línea y después a un punto) y despausa.
 func close() -> void:
 	_closing = true
 	Sfx.play("term_off")

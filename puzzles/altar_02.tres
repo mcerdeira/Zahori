@@ -4,6 +4,6 @@
 
 [resource]
 script = ExtResource("1_puzzle")
-word = "HYDRO"
-ability = "HYDRO VAPORIZATION"
+word = "STEAM"
+ability = "STEAM VAPORIZATION"
 ability_id = &"hydro"

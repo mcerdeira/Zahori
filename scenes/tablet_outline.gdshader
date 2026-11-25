@@ -1,6 +1,4 @@
 shader_type canvas_item;
-// Contorno de 1 px alrededor de lo que dibuja el SubViewport 3D de la tableta
-// (fondo transparente): marca la silueta y las grietas entre los pedazos.
 
 uniform vec4 outline_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 

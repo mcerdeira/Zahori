@@ -1,13 +1,11 @@
 shader_type canvas_item;
-// Desenfoque circular barato (dos anillos de muestras): para las capas
-// "fuera de foco" del título.
 
-uniform float radius = 2.0; // en texels de la textura
+uniform float radius = 2.0;
 
 varying vec4 tint;
 
 void vertex() {
-	tint = COLOR; // modulate (en fragment COLOR ya viene multiplicado por la textura)
+	tint = COLOR;
 }
 
 void fragment() {

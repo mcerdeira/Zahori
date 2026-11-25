@@ -1,39 +1,30 @@
 extends Node
 
-# Modo debug: arranca directo en DEBUG_START_SCENE salteando título e intros.
 const DEBUG: bool = false
 const DEBUG_START_SCENE := "res://scenes/rooms/level0.tscn"
 
-# Cantidad máxima de bloques
 var max_blocks: int = 4
 
-# Habilidades del player: { &"id": activa }
 var abilities: Dictionary = {
-	&"blocks": true,
-	&"hydro": false,
-	&"eat": false,
-	&"reach": false,
-	&"teleport": false,
-	&"zahori": false,
+	"blocks": false,
+	"hydro": false,
+	"eat": false,
+	"reach": false,
+	"teleport": false,
+	"zahori": false,
 }
 
 # true entre la muerte del player y la recarga de la room: el player nuevo
-# arranca con unos instantes de invulnerabilidad (player.respawn_grace).
+# arranca con unos instantes de invulnerabilidad (player.respawn_grace)
 var respawn_grace_pending: bool = false
 
-# Altares cuyo puzzle ya se resolvió
+# Altares resueltos
 var solved_altars: Dictionary = {}
 
-# Fragmentos de la tableta de piedra (coleccionable opcional). Ver scenes/tablet_piece.gd.
-# Un fragmento recién agarrado queda pendiente hasta que el player sale de la room
-# por una puerta; si muere antes, se pierde y vuelve a aparecer (así no sirve
-# suicidarse para volver a la puerta con el fragmento en la mano).
-# { índice (0..TABLET_PIECE_COUNT-1): true }
+# Fragmentos de la tableta de piedra
 const TABLET_PIECE_COUNT := 4
-var tablet_pieces: Dictionary = {}          # confirmados
-var pending_tablet_pieces: Dictionary = {}  # agarrados en la room actual
-
-# Final elegido al tocar el corazón (&"transcend", &"destroy" o &"awaken"). No se guarda.
+var tablet_pieces: Dictionary = {}         
+var pending_tablet_pieces: Dictionary = {}
 var ending: StringName = &""
 
 # true si el player llegó a la room actual atravesando una puerta.
@@ -47,19 +38,11 @@ var last_door: Dictionary = {}
 signal ability_changed(id: StringName, enabled: bool)
 
 const WATER_EVAPORATION := preload("res://scenes/water_evaporation.gd")
-
-# false cuando el agua de la room está evaporada (hydro). Se pone en false recién
-# cuando la evaporación borra los tiles, no al activar hydro: los botes flotan
-# mientras el agua se vea.
 var water_active: bool = true
 
 # Meta que guarda, en cada TileMapLayer, las celdas de agua ocultas por hydro.
 const HIDDEN_WATER_META := &"hidden_water_cells"
 
-# --- Partida guardada -------------------------------------------------------------
-# Se guarda al usar una terminal (scenes/altar.gd) en user://game.save, texto plano
-# (formato ConfigFile): habilidades, altares resueltos, fragmentos de la tableta
-# confirmados y la room + posición del altar, donde reaparece el player al cargar.
 const SAVE_PATH := "user://game.save"
 const SAVE_VERSION := 1
 
@@ -67,9 +50,7 @@ const SAVE_VERSION := 1
 var has_load_spawn := false
 var load_spawn := Vector2.ZERO
 
-# Respawn en el último altar usado de la room: al morir, la room se recarga pero el
-# player reaparece en el altar en vez de en la puerta por la que entró (así puede
-# volver a prender una habilidad que apagó). Se borra al salir por una puerta.
+# Respawn en el último altar usado de la room
 var altar_respawn_scene := ""
 var altar_respawn_pos := Vector2.ZERO
 
@@ -79,7 +60,6 @@ func _ready() -> void:
 	_default_abilities = abilities.duplicate()
 	ability_changed.connect(func(id, _enabled): if id == &"hydro": update_water_tiles())
 	get_tree().scene_changed.connect(update_water_tiles)
-	# Por si la escena inicial ya tiene agua
 	update_water_tiles.call_deferred()
 
 func has_ability(id: StringName) -> bool:
@@ -89,32 +69,25 @@ func set_ability(id: StringName, enabled: bool) -> void:
 	abilities[id] = enabled
 	ability_changed.emit(id, enabled)
 
-## true si el fragmento está confirmado o agarrado en esta room (no aparece en el mundo).
 func has_tablet_piece(index: int) -> bool:
 	return tablet_pieces.has(index) or pending_tablet_pieces.has(index)
 
-## Agarrado: queda pendiente hasta salir de la room (confirm_tablet_pieces).
 func add_tablet_piece(index: int) -> void:
 	pending_tablet_pieces[index] = true
 
-## Fragmentos que tiene el player, contando los pendientes.
 func tablet_piece_count() -> int:
 	return tablet_pieces.size() + pending_tablet_pieces.size()
 
-## Al salir de la room por una puerta: los pendientes pasan a ser definitivos.
 func confirm_tablet_pieces() -> void:
 	tablet_pieces.merge(pending_tablet_pieces)
 	pending_tablet_pieces.clear()
 
-## Al morir (o salir al título): los pendientes se pierden y vuelven a su lugar.
 func discard_pending_tablet_pieces() -> void:
 	pending_tablet_pieces.clear()
 
 func is_altar_solved(number: int) -> bool:
 	return solved_altars.has(number)
 
-
-# Marca el altar como resuelto
 func solve_altar(number: int, ability_id: StringName) -> void:
 	solved_altars[number] = true
 	if not abilities.has(ability_id):
@@ -122,8 +95,6 @@ func solve_altar(number: int, ability_id: StringName) -> void:
 		return
 	set_ability(ability_id, true)
 
-## Guarda la partida: el player va a reaparecer en `position` (coords de la room) de
-## la escena `room`. Los fragmentos pendientes (sin salir de la room) no se guardan.
 func save_game(room: String, position: Vector2) -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("game", "version", SAVE_VERSION)
@@ -137,16 +108,13 @@ func save_game(room: String, position: Vector2) -> void:
 	if err != OK:
 		push_warning("No se pudo guardar la partida en %s (error %d)" % [SAVE_PATH, err])
 
-## Marca el altar como punto de reaparición de la room actual (lo llama el altar al usarlo).
 func set_altar_respawn(position: Vector2) -> void:
 	altar_respawn_scene = get_tree().current_scene.scene_file_path
 	altar_respawn_pos = position
 
-## Al salir de la room por una puerta: vuelve a reaparecer en la puerta.
 func clear_altar_respawn() -> void:
 	altar_respawn_scene = ""
 
-## Posición del altar donde reaparecer en la room actual, o null si no hay.
 func altar_respawn_for_current() -> Variant:
 	var scene := get_tree().current_scene
 	if scene and altar_respawn_scene == scene.scene_file_path:
@@ -156,8 +124,6 @@ func altar_respawn_for_current() -> Variant:
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
-## Carga la partida guardada en el estado global y devuelve la escena de la room
-## a la que hay que ir ("" si no hay save o está roto). No cambia de escena.
 func load_game() -> String:
 	var cfg := ConfigFile.new()
 	if cfg.load(SAVE_PATH) != OK:
@@ -175,12 +141,11 @@ func load_game() -> String:
 		tablet_pieces[int(i)] = true
 	load_spawn = cfg.get_value("game", "position", Vector2.ZERO)
 	has_load_spawn = true
-	# Si muere antes de salir de la room, reaparece en el altar donde guardó
+	# Si muere antes de salir de la room reaparece en el altar donde guardo
 	altar_respawn_scene = room
 	altar_respawn_pos = load_spawn
 	return room
 
-## Deja el estado como al empezar una partida nueva (no toca el archivo de save).
 func reset_game() -> void:
 	abilities = _default_abilities.duplicate()
 	solved_altars.clear()
@@ -194,13 +159,11 @@ func reset_game() -> void:
 	has_load_spawn = false
 	altar_respawn_scene = ""
 
-#Activar o desactivar agua
 func update_water_tiles() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
 	var hide := has_ability(&"hydro")
-	# Sin hydro el agua está; con hydro, si no hay evaporación en curso, ya no.
 	water_active = not hide
 	for layer in scene.find_children("*", "TileMapLayer", true, false):
 		if hide:
@@ -227,9 +190,7 @@ func _hide_water_cells(layer: TileMapLayer) -> void:
 	if cells.is_empty():
 		return
 	layer.set_meta(HIDDEN_WATER_META, cells)
-	# Los tiles no se borran acá: el efecto muestra el agua un momento y la
-	# evapora (borra las celdas al terminar la espera).
-	water_active = true # hasta que el efecto borre los tiles
+	water_active = true
 	var fx := WATER_EVAPORATION.new()
 	fx.setup(layer, cells)
 	layer.add_child(fx)

@@ -1,18 +1,4 @@
 extends CanvasLayer
-## Pantalla de la tableta de piedra (coleccionable de 4 fragmentos).
-##
-## Muestra en 3D los fragmentos encontrados, ensamblados, renderizados a media
-## resolución en un SubViewport (pixel art en 3D) con contorno de 1 px.
-## LEFT/RIGHT giran la tableta, UP/DOWN la inclinan, `shoot` la da vuelta de golpe
-## (de un lado las enredaderas, del otro la inscripción). Con los 4 fragmentos
-## aparece abajo la inscripción traducida, letra por letra con la voz del
-## protagonista (scripts/monologue.gd).
-##
-## La abre el fragmento al agarrarlo (con `new_piece`: ese pedazo llega volando
-## y encaja) y el menú de pausa (opción TABLET). Pausa el juego mientras está
-## abierta, salvo que ya estuviera pausado (desde el menú de pausa).
-## `action`, `pause` o ESC la cierran.
-
 signal closed
 
 const TabletMesh := preload("res://scenes/tablet_mesh.gd")
@@ -21,7 +7,6 @@ const TEX_FRONT := preload("res://sprites/tablet_front_spr_0.png")
 const TEX_BACK := preload("res://sprites/tablet_back_spr_0.png")
 const TEX_SIDE := preload("res://sprites/tablet_side_spr_0.png")
 
-## La inscripción traducida (se muestra recién con los 4 fragmentos).
 const INSCRIPTION: Array[String] = [
 	"This temple was raised upon a sleeping spring.",
 	"Its roots drink, and their drinking keeps it dreaming.",
@@ -29,17 +14,14 @@ const INSCRIPTION: Array[String] = [
 	"Two shall come seeking. One shall be found.",
 ]
 
-## Índice del fragmento recién agarrado (-1: se abrió para mirarla).
 @export var new_piece: int = -1
-@export var rotate_speed: float = 2.6   # rad/s al mantener LEFT/RIGHT
-@export var tilt_speed: float = 1.6     # rad/s al mantener UP/DOWN
-@export var tilt_max: float = 0.7       # rad de inclinación máxima
-@export var smoothing: float = 9.0      # qué tan rápido sigue el giro al objetivo (1/s)
-@export var sway: float = 0.06          # rad del balanceo cuando no se toca nada
-@export var fade_time: float = 0.35     # segundos del fundido al abrir y cerrar
-@export var fly_time: float = 0.9       # segundos que tarda el fragmento nuevo en encajar
-## Altura (en unidades 3D) de la tableta y distancia de la cámara: centrada
-## sola, o subida y un poco más lejos para dejar lugar a la inscripción.
+@export var rotate_speed: float = 2.6
+@export var tilt_speed: float = 1.6 
+@export var tilt_max: float = 0.7   
+@export var smoothing: float = 9.0     
+@export var sway: float = 0.06     
+@export var fade_time: float = 0.35     
+@export var fly_time: float = 0.9     
 @export var center_y: float = 0.3
 @export var raised_y: float = 1.45
 @export var camera_distance: float = 10.0
@@ -51,22 +33,20 @@ var _target_yaw := 0.0
 var _target_pitch := 0.0
 var _time := 0.0
 var _closing := false
-var _input_delay := 0.3 # ignora el input al abrir (la tecla que la abrió)
+var _input_delay := 0.3
 var _paused_by_me := false
-var _pieces := {} # índice -> MeshInstance3D
+var _pieces := {}
 
 @onready var _bg: ColorRect = $bg
 @onready var _view: TextureRect = $view
 @onready var _viewport: SubViewport = $view/viewport
 @onready var _counter: Label = $counter
-@onready var _hint: Label = $hint
 @onready var _text: Node = $inscription
 @onready var _text_label: RichTextLabel = $inscription/RichTextLabel
 
 var _cam: Camera3D
-var _pivot: Node3D  # sube y baja la tableta
-var _spin: Node3D   # la gira
-
+var _pivot: Node3D 
+var _spin: Node3D   
 
 func _ready() -> void:
 	_paused_by_me = not get_tree().paused
@@ -82,7 +62,7 @@ func _ready() -> void:
 		_pivot.position.y = raised_y
 		_cam.position.z = raised_camera_distance
 
-	for node: CanvasItem in [_bg, _view, _counter, _hint, _text_label]:
+	for node: CanvasItem in [_bg, _view, _counter, _text_label]:
 		node.modulate.a = 0.0
 		create_tween().tween_property(node, "modulate:a", 1.0, fade_time)
 
@@ -93,7 +73,6 @@ func _ready() -> void:
 	elif complete:
 		await get_tree().create_timer(fade_time).timeout
 		_text.start()
-
 
 func _build_scene() -> void:
 	_cam = Camera3D.new()
@@ -121,26 +100,19 @@ func _build_scene() -> void:
 		_spin.add_child(mi)
 		_pieces[i] = mi
 
-
 func _material(tex: Texture2D) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = SHADER
 	m.set_shader_parameter(&"tex", tex)
 	return m
 
-
 func _refresh_labels() -> void:
 	_counter.text = "FRAGMENTS %d/%d" % [Global.tablet_piece_count(), Global.TABLET_PIECE_COUNT]
-	_hint.text = "%s %s ROTATE  %s FLIP  %s CLOSE" % [
-		_key(&"LEFT"), _key(&"RIGHT"), _key(&"shoot"), _key(&"action")]
-
 
 static func _key(action: StringName) -> String:
 	var keys: Array = Settings.keys.get(action, [0])
 	return Settings.key_name(keys[0])
 
-
-## El fragmento nuevo entra desde afuera de la pantalla girando y encaja en su lugar.
 func _fly_in(mi: MeshInstance3D) -> void:
 	var home: Vector3 = mi.get_meta(&"home")
 	var dir := Vector3(home.x, home.y, 0.0).normalized()
@@ -154,16 +126,12 @@ func _fly_in(mi: MeshInstance3D) -> void:
 	Sfx.play("stone_clack")
 	_shake()
 
-
-## Sacudón corto de la tableta al encajar un pedazo.
 func _shake() -> void:
 	var tw := create_tween()
 	var base := _spin.position
 	for off in [Vector3(0.08, -0.05, 0), Vector3(-0.06, 0.03, 0), Vector3(0.03, 0, 0), Vector3.ZERO]:
 		tw.tween_property(_spin, "position", base + off, 0.04)
 
-
-## Con el último fragmento: la tableta sube y aparece la inscripción traducida.
 func _reveal() -> void:
 	await get_tree().create_timer(0.5).timeout
 	Sfx.play("tablet_reveal")
@@ -172,7 +140,6 @@ func _reveal() -> void:
 	tw.tween_property(_cam, "position:z", raised_camera_distance, 1.2)
 	await tw.finished
 	_text.start()
-
 
 func _process(delta: float) -> void:
 	_time += delta
@@ -187,7 +154,6 @@ func _process(delta: float) -> void:
 	_pitch = lerpf(_pitch, _target_pitch, k)
 	_spin.rotation = Vector3(_pitch + sin(_time * 0.9) * sway * 0.6, _yaw + sin(_time * 0.6) * sway, 0.0)
 
-
 func _input(event: InputEvent) -> void:
 	if _closing:
 		return
@@ -199,16 +165,14 @@ func _input(event: InputEvent) -> void:
 		_close()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"shoot"):
-		# Da vuelta la tableta al lado opuesto más cercano
 		_target_yaw = (roundf(_target_yaw / PI) + 1.0) * PI
 		Sfx.play("stone_clack", 1.6, -10.0)
 		get_viewport().set_input_as_handled()
 
-
 func _close() -> void:
 	_closing = true
 	var tw := create_tween().set_parallel()
-	for node: CanvasItem in [_bg, _view, _counter, _hint, _text_label]:
+	for node: CanvasItem in [_bg, _view, _counter, _text_label]:
 		tw.tween_property(node, "modulate:a", 0.0, fade_time)
 	await tw.finished
 	if _paused_by_me:

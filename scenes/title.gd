@@ -1,10 +1,4 @@
 extends Control
-## Pantalla de título. Enredaderas que crecen de fondo (desenfocadas, renderizadas
-## a media resolución con blur), otras adelante como silueta, chispas, y el
-## nombre del juego. Con cualquier tecla aparece el menú abajo al centro:
-## NEW GAME / CONTINUE / SETTINGS / QUIT. NEW GAME arranca una partida nueva
-## desde la Intro; CONTINUE carga user://game.save (Global.load_game) y va directo
-## a la room guardada (gris y deshabilitado si no hay partida guardada).
 
 const NEXT_SCENE := "res://scenes/Intro.tscn"
 const SETTINGS_SCENE := preload("res://scenes/settings_menu.tscn")
@@ -14,15 +8,15 @@ const OPTIONS: Array[String] = ["NEW GAME", "CONTINUE", "SETTINGS", "QUIT"]
 const INK := Color(0.95, 0.95, 0.97)
 const DIM := Color(0.42, 0.43, 0.48)
 const ACCENT := Color(1.0, 0.78, 0.42)
-const DISABLED := Color(0.22, 0.22, 0.26) # CONTINUE sin partida guardada
+const DISABLED := Color(0.22, 0.22, 0.26)
 
-@export var fade_in_time: float = 2.0     # segundos del fundido desde negro
-@export var title_delay: float = 1.2      # segundos hasta que aparece el nombre
-@export var title_fade_time: float = 2.5  # segundos que tarda en aparecer el nombre
-@export var prompt_delay: float = 1.0     # segundos después del nombre hasta "PRESS ANY KEY"
-@export var leave_time: float = 1.4       # segundos del fundido a negro al empezar
-@export var menu_bottom: float = 70.0     # px desde abajo hasta la primera opción
-@export var menu_spacing: float = 16.0    # px entre opciones
+@export var fade_in_time: float = 2.0
+@export var title_delay: float = 1.2
+@export var title_fade_time: float = 2.5
+@export var prompt_delay: float = 1.0
+@export var leave_time: float = 1.4
+@export var menu_bottom: float = 70.0
+@export var menu_spacing: float = 16.0
 
 @onready var back_view: TextureRect = $back_view
 @onready var back_viewport: SubViewport = $back_view/viewport
@@ -38,13 +32,12 @@ enum State { INTRO, PROMPT, MENU, LEAVING }
 
 var _state := State.INTRO
 var _selected := 0
-var _prompt_t := -1.0   # segundos desde que apareció el prompt (-1 = todavía no)
-var _menu_t := 0.0      # segundos desde que apareció el menú
+var _prompt_t := -1.0
+var _menu_t := 0.0
 var _time := 0.0
 var _settings: Node = null
 var _intro_tween: Tween
 var _has_save := false
-
 
 func _ready() -> void:
 	if Global.DEBUG:
@@ -84,14 +77,11 @@ func _ready() -> void:
 		_state = State.PROMPT
 		_prompt_t = 0.0)
 
-
-## Chisporroteo a lo largo del nombre cuando aparece.
 func _title_sparks() -> void:
 	var r := Rect2(title_label.position, title_label.size)
 	for i in 5:
 		sparks.burst(Vector2(lerpf(r.position.x + 30, r.end.x - 30, i / 4.0),
 				r.position.y + r.size.y * randf_range(0.35, 0.7)), randi_range(4, 8))
-
 
 func _process(delta: float) -> void:
 	_time += delta
@@ -99,12 +89,10 @@ func _process(delta: float) -> void:
 		_prompt_t += delta
 	if _state == State.MENU:
 		_menu_t += delta
-	# El nombre late apenas, como iluminado por una vela; el resplandor respira
 	var flicker := 0.93 + 0.04 * sin(_time * 1.7) + 0.03 * sin(_time * 7.3 + sin(_time * 2.1))
 	title_label.self_modulate = Color(flicker, flicker, flicker)
 	glow.self_modulate.a = 0.75 + 0.25 * sin(_time * 0.8)
 	ui.queue_redraw()
-
 
 func _input(event: InputEvent) -> void:
 	if _settings or _state == State.LEAVING:
@@ -126,15 +114,12 @@ func _input(event: InputEvent) -> void:
 	elif _pressed(event, ["action", "ui_accept"]):
 		_choose()
 
-
 func _pressed(event: InputEvent, actions: Array) -> bool:
 	for a in actions:
 		if InputMap.has_action(a) and event.is_action_pressed(a):
 			return true
 	return false
 
-
-## Muestra el menú (si todavía corría la animación de entrada, la completa).
 func _show_menu() -> void:
 	if _intro_tween and _intro_tween.is_running():
 		_intro_tween.kill()
@@ -146,7 +131,6 @@ func _show_menu() -> void:
 	_menu_t = 0.0
 	_prompt_t = -1.0
 	Sfx.play("term_on", 0.8, -6.0)
-
 
 func _choose() -> void:
 	if OPTIONS[_selected] == "CONTINUE" and not _has_save:
@@ -175,9 +159,6 @@ func _choose() -> void:
 			tw.tween_property(fade, "modulate:a", 1.0, 0.5)
 			tw.tween_callback(get_tree().quit)
 
-
-## Fundido a negro y a `scene`. in_game: va directo a una room (partida cargada),
-## así que arranca el tema principal (en las intros lo arranca Intro2).
 func _start_game(scene: String, in_game := false) -> void:
 	_state = State.LEAVING
 	Music.stop_title_theme(leave_time)
@@ -189,18 +170,13 @@ func _start_game(scene: String, in_game := false) -> void:
 			Music.play_main_theme()
 		get_tree().change_scene_to_file(scene))
 
-
-# --- Dibujo del prompt y del menú -------------------------------------------------
-
 func _option_pos(i: int) -> Vector2:
 	return Vector2(size.x / 2.0, size.y - menu_bottom + i * menu_spacing)
-
 
 func _text_centered(center: Vector2, s: String, color: Color) -> void:
 	var w := FONT.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
 	ui.draw_string(FONT, Vector2(center.x - w / 2.0, center.y).round(), s,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 8, color)
-
 
 func _draw_ui() -> void:
 	if _prompt_t >= 0.0:
@@ -209,7 +185,7 @@ func _draw_ui() -> void:
 	if _state != State.MENU and _state != State.LEAVING:
 		return
 	if _settings:
-		return # el menú queda tapado por la pantalla de opciones
+		return
 	for i in OPTIONS.size():
 		var a := clampf((_menu_t - i * 0.09) / 0.3, 0.0, 1.0)
 		if a <= 0.0:

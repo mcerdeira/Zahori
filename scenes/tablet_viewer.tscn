@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dyyptonaxxjsk"]
 
-[ext_resource type="Script" path="res://scenes/tablet_viewer.gd" id="1_viewer"]
-[ext_resource type="Shader" path="res://scenes/tablet_outline.gdshader" id="2_outline"]
-[ext_resource type="Script" path="res://scripts/monologue.gd" id="3_mono"]
+[ext_resource type="Script" uid="uid://dhjd76nt0jpe2" path="res://scenes/tablet_viewer.gd" id="1_viewer"]
+[ext_resource type="Shader" uid="uid://bd3obfvsgixgl" path="res://scenes/tablet_outline.gdshader" id="2_outline"]
+[ext_resource type="Script" uid="uid://ctmwcrxry5as2" path="res://scripts/monologue.gd" id="3_mono"]
 [ext_resource type="FontFile" uid="uid://cyy1mfwfjcwwk" path="res://fonts/PirataOne-Regular.ttf" id="4_pirata"]
 [ext_resource type="FontFile" uid="uid://b6deyqomhyd28" path="res://fonts/prstartk.ttf" id="5_term"]
 
@@ -10,57 +10,45 @@
 shader = ExtResource("2_outline")
 shader_parameter/outline_color = Color(0.03, 0.025, 0.05, 1)
 
-[node name="TabletViewer" type="CanvasLayer"]
+[node name="TabletViewer" type="CanvasLayer" unique_id=402681801]
 process_mode = 3
 layer = 21
 script = ExtResource("1_viewer")
 
-[node name="bg" type="ColorRect" parent="."]
+[node name="bg" type="ColorRect" parent="." unique_id=1175413328]
 offset_right = 576.0
 offset_bottom = 324.0
 color = Color(0.02, 0.025, 0.035, 0.92)
 
-[node name="view" type="TextureRect" parent="."]
+[node name="view" type="TextureRect" parent="." unique_id=1582468743]
 texture_filter = 1
 material = SubResource("ShaderMaterial_outline")
 offset_right = 576.0
 offset_bottom = 324.0
 expand_mode = 1
-stretch_mode = 0
 
-[node name="viewport" type="SubViewport" parent="view"]
+[node name="viewport" type="SubViewport" parent="view" unique_id=1051192412]
 own_world_3d = true
 transparent_bg = true
 size = Vector2i(288, 162)
 render_target_update_mode = 4
 
-[node name="counter" type="Label" parent="."]
-offset_left = 12.0
+[node name="counter" type="Label" parent="." unique_id=1654782553]
 offset_top = 10.0
-offset_right = 200.0
+offset_right = 576.0
 offset_bottom = 20.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.65, 1)
 theme_override_fonts/font = ExtResource("5_term")
 theme_override_font_sizes/font_size = 8
 text = "FRAGMENTS 0/4"
+horizontal_alignment = 1
 
-[node name="hint" type="Label" parent="."]
-offset_left = 200.0
-offset_top = 10.0
-offset_right = 564.0
-offset_bottom = 20.0
-theme_override_colors/font_color = Color(0.45, 0.45, 0.45, 1)
-theme_override_fonts/font = ExtResource("5_term")
-theme_override_font_sizes/font_size = 8
-text = "ROTATE"
-horizontal_alignment = 2
-
-[node name="inscription" type="Node" parent="."]
+[node name="inscription" type="Node" parent="." unique_id=687064415]
 script = ExtResource("3_mono")
 autostart = false
 hold_time = 1.0
 
-[node name="RichTextLabel" type="RichTextLabel" parent="inscription"]
+[node name="RichTextLabel" type="RichTextLabel" parent="inscription" unique_id=692480470]
 offset_left = 24.0
 offset_top = 196.0
 offset_right = 552.0

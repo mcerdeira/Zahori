@@ -1,9 +1,4 @@
 extends CanvasLayer
-## Pantalla de opciones: volumen (Master / Music / SFX), pantalla completa y
-## remapeo de teclas. Se dibuja entera a mano (`_draw` del nodo `canvas`) con la
-## fuente de la terminal. Funciona aunque el juego esté pausado.
-## UP/DOWN eligen, LEFT/RIGHT cambian valores, `action`/ENTER confirman,
-## ESC o `pause` vuelven atrás.
 
 signal closed
 
@@ -11,27 +6,25 @@ enum Page { MAIN, CONTROLS }
 
 const FONT := preload("res://fonts/prstartk.ttf")
 const MAIN_ROWS: Array[String] = ["MASTER", "MUSIC", "SFX", "DISPLAY", "CONTROLS", "BACK"]
-## Fila del menú -> bus de audio que regula.
 const BUS_OF := {"MASTER": &"Master", "MUSIC": &"Music", "SFX": &"SFX"}
 
 const INK := Color(0.92, 0.92, 0.95)
 const DIM := Color(0.45, 0.46, 0.52)
-const ACCENT := Color(1.0, 0.78, 0.42) # mismo dorado que las chispas del título
+const ACCENT := Color(1.0, 0.78, 0.42)
 const PANEL_BG := Color(0.02, 0.025, 0.035, 0.92)
 const PANEL_BORDER := Color(0.32, 0.33, 0.4)
 
-@export var volume_step: float = 0.1 # cuánto cambia un slider por pulsación (0..1)
-@export var fade_time: float = 0.15  # segundos del fade de entrada/salida
+@export var volume_step: float = 0.1
+@export var fade_time: float = 0.15
 
 @onready var canvas: Control = $canvas
 
 var _page := Page.MAIN
 var _row := 0
-var _col := 0           # en CONTROLS: 0 tecla primaria, 1 alternativa
+var _col := 0
 var _waiting_key := false
 var _closing := false
 var _blink := 0.0
-
 
 func _ready() -> void:
 	canvas.draw.connect(_draw_menu)
@@ -39,21 +32,16 @@ func _ready() -> void:
 	canvas.modulate.a = 0.0
 	create_tween().tween_property(canvas, "modulate:a", 1.0, fade_time)
 
-
 func _process(delta: float) -> void:
 	_blink += delta
 	if _waiting_key:
 		canvas.queue_redraw()
-
-
-# --- Input ----------------------------------------------------------------------
 
 func _pressed(event: InputEvent, actions: Array, echo := false) -> bool:
 	for a in actions:
 		if InputMap.has_action(a) and event.is_action_pressed(a, echo):
 			return true
 	return false
-
 
 func _input(event: InputEvent) -> void:
 	if _closing:
@@ -88,15 +76,12 @@ func _input(event: InputEvent) -> void:
 		canvas.queue_redraw()
 	get_viewport().set_input_as_handled()
 
-
 func _row_count() -> int:
 	return MAIN_ROWS.size() if _page == Page.MAIN else Settings.ACTIONS.size() + 2
-
 
 func _move(dir: int) -> void:
 	_row = (_row + dir + _row_count()) % _row_count()
 	Sfx.play("term_key")
-
 
 func _side(dir: int) -> void:
 	if _page == Page.CONTROLS:
@@ -113,7 +98,6 @@ func _side(dir: int) -> void:
 		"DISPLAY":
 			Settings.set_fullscreen(not Settings.fullscreen)
 			Sfx.play("term_key")
-
 
 func _confirm() -> void:
 	if _page == Page.MAIN:
@@ -140,7 +124,6 @@ func _confirm() -> void:
 	else:
 		_back()
 
-
 func _capture_key(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
@@ -157,7 +140,6 @@ func _capture_key(event: InputEvent) -> void:
 		Sfx.play("term_ok")
 	canvas.queue_redraw()
 
-
 func _back() -> void:
 	if _page == Page.CONTROLS:
 		_page = Page.MAIN
@@ -172,13 +154,9 @@ func _back() -> void:
 		closed.emit()
 		queue_free())
 
-
-# --- Dibujo ---------------------------------------------------------------------
-
 func _text(pos: Vector2, s: String, color: Color, size := 8,
 		align := HORIZONTAL_ALIGNMENT_LEFT, width := -1.0) -> void:
 	canvas.draw_string(FONT, pos.round(), s, align, width, size, color)
-
 
 func _draw_menu() -> void:
 	var view := canvas.size
@@ -199,7 +177,6 @@ func _draw_menu() -> void:
 	else:
 		_draw_controls(panel)
 
-
 func _draw_main(panel: Rect2) -> void:
 	var x := panel.position.x + 44
 	var y := panel.position.y + 72
@@ -207,7 +184,6 @@ func _draw_main(panel: Rect2) -> void:
 		var sel := i == _row
 		var row_name := MAIN_ROWS[i]
 		var color := INK if sel else DIM
-		# Separación extra antes de cada grupo
 		if row_name == "DISPLAY" or row_name == "CONTROLS" or row_name == "BACK":
 			y += 8
 		if i == 0:
@@ -229,7 +205,6 @@ func _draw_main(panel: Rect2) -> void:
 	_text(Vector2(panel.position.x, panel.end.y - 12), hint, Color(DIM, 0.8), 8,
 			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x)
 
-
 func _draw_slider(pos: Vector2, value: float, sel: bool) -> void:
 	const SEGMENTS := 10
 	const SEG_W := 10.0
@@ -243,7 +218,6 @@ func _draw_slider(pos: Vector2, value: float, sel: bool) -> void:
 			canvas.draw_rect(r.grow(-0.5), Color(DIM, 0.5), false, 1.0)
 	_text(pos + Vector2(SEGMENTS * (SEG_W + 2) + 8, 7), "%3d%%" % roundi(value * 100),
 			INK if sel else DIM)
-
 
 func _draw_controls(panel: Rect2) -> void:
 	var x := panel.position.x + 36

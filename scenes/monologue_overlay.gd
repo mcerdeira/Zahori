@@ -1,17 +1,10 @@
 extends "res://scripts/monologue.gd"
 
-## Monólogo dentro de una room (p. ej. al encontrar a la hermana): pausa el juego,
-## oscurece la pantalla con un fundido, corre las líneas como en la intro y al
-## terminar vuelve a mostrar la room, despausa, emite finished y se borra.
-
-@export var dim_alpha: float = 0.88 # opacidad del fondo negro (0..1)
-@export var dim_time: float = 0.8   # segundos del fundido de entrada y de salida
-## true: al terminar no aclara el fondo (queda oscuro hasta borrarse), para que
-## lo que sigue arranque desde la pantalla oscura (p. ej. el "objeto obtenido").
+@export var dim_alpha: float = 0.88
+@export var dim_time: float = 0.8
 @export var keep_dark_on_finish: bool = false
 
 @onready var _bg: ColorRect = $bg
-
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -22,7 +15,6 @@ func _ready() -> void:
 	var tw := create_tween()
 	tw.tween_property(_bg, "modulate:a", dim_alpha, dim_time)
 	tw.tween_callback(start)
-
 
 func _finish() -> void:
 	var tw := create_tween()

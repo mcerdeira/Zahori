@@ -1,44 +1,33 @@
 extends Control
-## Pantalla de la terminal: consola de texto (RichTextLabel para la salida y
-## LineEdit para el prompt) que bootea y después corre el puzzle del glifo
-## (o, en un altar de pistas, muestra el texto de la pista).
-## Todo lo que "escribe" el sistema o el usuario simulado pasa por una cola
-## que se tipea de a un carácter.
 
 signal solved
 
-## Respuesta del sistema: rápida y sin sonido.
 const COLOR := Color(0.55, 0.88, 1.0)
 const SYSTEM := 160.0
-## "Usuario" tipeando: más lento y con click de tecla.
 const USER := 14.0
-## Texto de las pistas: más lento que el sistema, para que se lea al aparecer.
 const HINT := 45.0
 const CORRECT_BBCODE := "[bgcolor=#8ce0ff][color=#000000]%s[/color][/bgcolor]"
 const PRESENT_BBCODE := "%s"
 const ABSENT_BBCODE := "[color=#8ce0ff40]%s[/color]"
 
-@export var max_log_lines: int = 5         # líneas de historial visibles durante el puzzle
-@export var unfold_scale: float = 0.5      # escala de las letras al desplegar la palabra
-@export var hint_toggle_lines: int = 10    # líneas visibles al preguntar TURN ON/OFF tras una pista
+@export var max_log_lines: int = 5
+@export var unfold_scale: float = 0.5
+@export var hint_toggle_lines: int = 10
 
-## Número de altar: define el puzzle y el texto de la barra de estado.
 var altar_number := 1
-## Altar de pistas: muestra un texto fijo en vez del glifo.
 var is_hint := false
 var puzzle: GlyphPuzzle
 
-var _log := ""         # bbcode de la salida
-var _log_limit := 0    # 0 = sin límite de líneas (booteo)
-var _queue: Array = [] # items {text, cps, input} | float (pausa) | Callable
+var _log := ""
+var _log_limit := 0
+var _queue: Array = []
 var _type_timer := 0.0
-var _awaiting := false # esperando que el jugador escriba
-var _toggling := false # altar ya resuelto: se pregunta si prender/apagar la habilidad
+var _awaiting := false
+var _toggling := false
 
 @onready var glyphs: HBoxContainer = $vbox/glyphs
 @onready var glyphs_gap: Control = $vbox/glyphs_gap
 @onready var typed_col: Control = $vbox/glyphs/typed_col
-## Glifo a descifrar y glifo que se va formando con lo que tipea el jugador.
 @onready var target: GlyphView = $vbox/glyphs/target_col/target
 @onready var typed: GlyphView = $vbox/glyphs/typed_col/typed
 @onready var log_label: RichTextLabel = $vbox/log
@@ -46,7 +35,6 @@ var _toggling := false # altar ya resuelto: se pregunta si prender/apagar la hab
 @onready var prompt: Label = $vbox/prompt_row/prompt
 @onready var input: LineEdit = $vbox/prompt_row/input
 @onready var status_right: Label = $status_bar/status_right
-
 
 func _ready() -> void:
 	status_right.text = "ALTAR-%02d" % altar_number
@@ -56,13 +44,9 @@ func _ready() -> void:
 		input.set("keep_editing_on_text_submit", true)
 	_refresh_log()
 
-
-## true mientras el sistema está escribiendo (el jugador no puede tipear).
 func is_busy() -> bool:
 	return not _queue.is_empty()
 
-
-## Termina al instante todo lo pendiente de la cola.
 func skip() -> void:
 	while not _queue.is_empty():
 		var item = _queue.pop_front()
@@ -72,7 +56,6 @@ func skip() -> void:
 			for ch in item.text:
 				_put(ch, item.input)
 	_type_timer = 0.0
-
 
 func boot() -> void:
 	_type_log("ALTAR OS V1.14\n(C) 1989 TEMPLE SYS.\n" + "-".repeat(20) + "\n")
@@ -94,24 +77,17 @@ func boot() -> void:
 	_wait(0.6)
 	_then(_start)
 
-
-# --- Cola de tipeo -----------------------------------------------------------
-
 func _type_log(text: String, cps: float = SYSTEM) -> void:
 	_queue.append({"text": text, "cps": cps, "input": false})
-
 
 func _type_input(text: String, cps: float = USER) -> void:
 	_queue.append({"text": text, "cps": cps, "input": true})
 
-
 func _wait(seconds: float) -> void:
 	_queue.append(seconds)
 
-
 func _then(action: Callable) -> void:
 	_queue.append(action)
-
 
 func _process(delta: float) -> void:
 	if _queue.is_empty():
@@ -135,8 +111,6 @@ func _process(delta: float) -> void:
 			_put(ch, item.input)
 			_type_timer += 1.0 / item.cps
 
-
-## Escribe un carácter en la salida o en el prompt (como si lo tipeara el usuario).
 func _put(ch: String, to_input: bool) -> void:
 	if to_input:
 		input.text += ch
@@ -147,11 +121,9 @@ func _put(ch: String, to_input: bool) -> void:
 		_log += "[lb]" if ch == "[" else ch
 		_refresh_log()
 
-
 func _add_line(bbcode: String) -> void:
 	_log += bbcode + "\n"
 	_refresh_log()
-
 
 func _refresh_log() -> void:
 	var lines := _log.trim_suffix("\n").split("\n")
@@ -159,7 +131,6 @@ func _refresh_log() -> void:
 		lines = lines.slice(lines.size() - _log_limit)
 	log_label.text = "\n".join(lines)
 	log_label.visible = not log_label.text.is_empty()
-
 
 func _show_prompt(symbol: String) -> void:
 	prompt.text = symbol
@@ -169,16 +140,11 @@ func _show_prompt(symbol: String) -> void:
 	if input.has_method("edit"):
 		input.edit()
 
-
-## Pasa la línea del prompt a la salida, como al apretar Enter.
 func _echo_input() -> void:
 	_log += (prompt.text + " " + input.text).replace("[", "[lb]") + "\n"
 	input.text = ""
 	prompt_row.visible = false
 	_refresh_log()
-
-
-# --- Puzzle ------------------------------------------------------------------
 
 func _start() -> void:
 	_log = ""
@@ -195,7 +161,6 @@ func _start() -> void:
 	else:
 		_start_puzzle()
 
-
 func _start_puzzle() -> void:
 	var word := puzzle.answer()
 	glyphs.visible = true
@@ -206,8 +171,6 @@ func _start_puzzle() -> void:
 	_show_prompt(">")
 	_awaiting = true
 
-
-## Sólo letras y en mayúsculas; cada tecla hace click.
 func _on_text_changed(text: String) -> void:
 	var clean := ""
 	for ch in text.to_upper():
@@ -220,7 +183,6 @@ func _on_text_changed(text: String) -> void:
 	if _awaiting:
 		typed.letters = clean
 	Sfx.play("term_key", randf_range(0.85, 1.2), -6.0)
-
 
 func _on_submitted(text: String) -> void:
 	if not _awaiting or is_busy():
@@ -242,12 +204,10 @@ func _on_submitted(text: String) -> void:
 	else:
 		Sfx.play("term_err")
 
-
-## Resultado estilo Wordle: letra justa, letra en otro lugar o letra que no está.
 func _score(guess: String, word: String) -> String:
 	var result: Array[String] = []
 	result.resize(guess.length())
-	var pending := {} # letras de la palabra que no fueron acertadas en su lugar
+	var pending := {}
 	for i in guess.length():
 		if guess[i] == word[i]:
 			result[i] = CORRECT_BBCODE % guess[i]
@@ -263,12 +223,10 @@ func _score(guess: String, word: String) -> String:
 			result[i] = ABSENT_BBCODE % guess[i]
 	return " ".join(result)
 
-
 func _win() -> void:
 	_awaiting = false
 	Global.solve_altar(altar_number, puzzle.ability_id)
 	prompt_row.visible = false
-	# Sólo queda la jugada ganadora, así el mensaje final entra con su espaciado
 	var lines := _log.trim_suffix("\n").split("\n")
 	_log = lines[-1] + "\n"
 	_log_limit = 0
@@ -282,18 +240,11 @@ func _win() -> void:
 	_wait(0.5)
 	_then(solved.emit)
 
-
-## Separa las letras superpuestas del glifo y las acomoda en fila (a lo ancho
-## de los dos cuadros) para revelar la palabra.
 func _unfold_glyph() -> void:
 	var tw := create_tween().set_parallel()
 	tw.tween_property(typed_col, "modulate:a", 0.0, 0.3)
-	# Alineada a la izquierda, como el resto del texto de la consola
 	var left_x := glyphs.global_position.x - target.global_position.x
 	target.unfold_row(left_x, unfold_scale, 0.6)
-
-
-# --- Altar de pistas: sólo se lee el texto -----------------------------------
 
 func _start_hint() -> void:
 	_log_limit = 0
@@ -302,8 +253,6 @@ func _start_hint() -> void:
 		_type_log("ERROR: FILE NOT FOUND\nALTAR-%02d.TXT\n" % altar_number)
 	else:
 		_type_log(hint.text.strip_edges() + "\n", HINT)
-	# Si el puzzle al que apunta la pista ya está resuelto, también deja prender o
-	# apagar esa habilidad, como el altar de puzzle.
 	if hint == null or hint.puzzle <= 0 or not Global.is_altar_solved(hint.puzzle):
 		return
 	puzzle = GlyphPuzzle.for_altar(hint.puzzle)
@@ -311,12 +260,8 @@ func _start_hint() -> void:
 		return
 	_wait(0.6)
 	_type_log("\n")
-	# Que no se salga de la pantalla: si la pista es larga, sube y quedan las últimas líneas
 	_then(func(): _log_limit = hint_toggle_lines)
 	_start_toggle()
-
-
-# --- Altar ya resuelto: prender/apagar la habilidad --------------------------
 
 func _start_toggle() -> void:
 	_toggling = true
@@ -326,7 +271,6 @@ func _start_toggle() -> void:
 		input.max_length = 3
 		_show_prompt(">")
 		_awaiting = true)
-
 
 func _answer_toggle(answer: String) -> void:
 	input.text = ""

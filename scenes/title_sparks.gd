@@ -1,17 +1,13 @@
 extends Node2D
-## Chispas del título: brasas sueltas que suben despacio titilando y, cada
-## tanto, un chisporroteo en un punto al azar. Se dibujan como píxeles con
-## blend aditivo (lo pone la escena) y un halo tenue.
 
-var area := Vector2(576, 324) # lo pone title.gd con start()
-@export var ambient_rate: float = 5.0            # brasas sueltas por segundo
-@export var burst_interval := Vector2(1.2, 3.5)  # segundos entre chisporroteos
-@export var burst_count := Vector2i(5, 12)       # chispas por chisporroteo
+var area := Vector2(576, 324)
+@export var ambient_rate: float = 5.0
+@export var burst_interval := Vector2(1.2, 3.5)
+@export var burst_count := Vector2i(5, 12)
 @export var colors: Array[Color] = [
 	Color(1.0, 0.78, 0.42), Color(1.0, 0.62, 0.3), Color(1.0, 0.9, 0.65),
-	Color(0.55, 0.88, 1.0), # alguna cian, como la tinta de los altares
+	Color(0.55, 0.88, 1.0),
 ]
-
 
 class Spark:
 	var pos: Vector2
@@ -25,30 +21,24 @@ class Spark:
 	var wobble: float
 	var phase: float
 
-
 var _sparks: Array[Spark] = []
 var _ambient_acc := 0.0
 var _burst_timer := 1.0
 var _time := 0.0
 var _rng := RandomNumberGenerator.new()
 
-
 func _ready() -> void:
 	set_process(false)
-
 
 func start(size: Vector2) -> void:
 	area = size
 	_rng.randomize()
 	set_process(true)
 
-
 func _pick_color() -> Color:
-	# La cian es rara: 1 de cada 8
 	if _rng.randf() < 0.12:
 		return colors[-1]
 	return colors[_rng.randi() % (colors.size() - 1)]
-
 
 func _process(delta: float) -> void:
 	_time += delta
@@ -72,8 +62,6 @@ func _process(delta: float) -> void:
 		s.pos += (s.vel + Vector2(sin(_time * 2.0 + s.phase) * s.wobble, 0.0)) * delta
 	queue_redraw()
 
-
-## Brasa suelta: nace abajo y sube despacio, meciéndose.
 func _spawn_ember() -> void:
 	var s := Spark.new()
 	s.pos = Vector2(_rng.randf() * area.x, _rng.randf_range(0.4, 1.05) * area.y)
@@ -88,8 +76,6 @@ func _spawn_ember() -> void:
 	s.phase = _rng.randf() * TAU
 	_sparks.append(s)
 
-
-## Chisporroteo: `count` chispas que saltan desde `at` y caen apagándose.
 func burst(at: Vector2, count: int) -> void:
 	var color := _pick_color()
 	for i in count:
@@ -106,11 +92,9 @@ func burst(at: Vector2, count: int) -> void:
 		s.phase = _rng.randf() * TAU
 		_sparks.append(s)
 
-
 func _draw() -> void:
 	for s in _sparks:
 		var k := s.life / s.max_life
-		# Entra rápido, se apaga lento, y titila
 		var a := clampf((1.0 - k) * 8.0, 0.0, 1.0) * k
 		a *= 0.55 + 0.45 * sin(_time * 23.0 + s.phase * 7.0)
 		var p := s.pos.round()
