@@ -16,6 +16,7 @@ extends Area2D
 @export var glow_radius: float = 40.0
 @export var glow_strength: float = 0.45
 @export var glow_steps: int = 4
+@export var instant_and_visible: bool = false
 
 const GLOW_SHADER := preload("res://scenes/door_glow.gdshader")
 
@@ -34,7 +35,8 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	if instant:
-		$sprite.visible = false
+		if !instant_and_visible:
+			$sprite.visible = false
 		if glow_enabled:
 			_build_glow()
 		rearm()

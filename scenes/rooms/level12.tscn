@@ -104,7 +104,7 @@ target_scene = "uid://cpsy4rne5r7o8"
 [node name="Vine" parent="." unique_id=2108265295 instance=ExtResource("13_4fgdw")]
 position = Vector2(24, -6)
 start_delay = 1.1
-step_time = 0.09
+step_time = 0.1
 eat_time = 1.8
 
 [node name="KillerObj" parent="." unique_id=719636805 instance=ExtResource("14_3of12")]

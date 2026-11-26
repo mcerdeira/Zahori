@@ -77,15 +77,20 @@ func _input(event: InputEvent) -> void:
 				_open_submenu(SETTINGS_SCENE)
 			"TABLET":
 				Sfx.play("term_ok")
-				_open_submenu(TABLET_SCENE)
+				_open_submenu(TABLET_SCENE, true)
 			"QUIT":
 				Sfx.play("term_ok")
 				_quit_to_title()
 	get_viewport().set_input_as_handled()
 
-func _open_submenu(scene: PackedScene) -> void:
+func _open_submenu(scene: PackedScene, hide_monitor := false) -> void:
 	_submenu = scene.instantiate()
-	_submenu.closed.connect(func(): _submenu = null)
+	_submenu.closed.connect(func():
+		_submenu = null
+		if hide_monitor:
+			create_tween().tween_property(monitor, "modulate:a", 1.0, 0.15))
+	if hide_monitor:
+		create_tween().tween_property(monitor, "modulate:a", 0.0, 0.15)
 	add_child(_submenu)
 
 func _refresh() -> void:

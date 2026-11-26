@@ -34,6 +34,10 @@ var _root_cell := Vector2i.ZERO
 var _origin := Vector2i.ZERO
 var _dims := Vector2i.ZERO
 
+static var _plan_frame := -1
+static var _tiles_version := 0
+static var _tile_cache := {}
+
 @onready var _root: Sprite2D = $root
 @onready var _head: AnimatedSprite2D = $head
 
@@ -80,9 +84,13 @@ func _physics_process(delta: float) -> void:
 		_head.speed_scale = 1.0
 		_timer = step_time
 	if _timer <= 0.0:
+		var frame := Engine.get_physics_frames()
+		if _plan_frame == frame:
+			return
+		_plan_frame = frame
 		_grow()
 		if not _eating:
-			_timer = step_time
+			_timer = maxf(_timer, -step_time) + step_time
 
 func _wake() -> void:
 	var first := not get_tree().get_nodes_in_group("vines").any(
@@ -218,15 +226,26 @@ func _solid_at(c: Vector2i) -> bool:
 	return _solid.size() > 0 and _solid[_idx(c)] == 1
 
 func _scan_tiles() -> void:
-	var n := _dims.x * _dims.y
-	_solid.resize(n)
-	_solid.fill(0)
-	_support.resize(n)
-	_support.fill(0)
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
-	for layer: TileMapLayer in scene.find_children("*", "TileMapLayer", true, false):
+	var layers := scene.find_children("*", "TileMapLayer", true, false)
+	for layer: TileMapLayer in layers:
+		if not layer.changed.is_connected(_on_tiles_changed):
+			layer.changed.connect(_on_tiles_changed)
+	var key := [scene.get_instance_id(), _origin, _dims, cling_range]
+	var cached: Array = _tile_cache.get(key, [])
+	if not cached.is_empty() and cached[0] == _tiles_version:
+		_solid = cached[1]
+		_support = cached[2]
+		return
+	_tile_cache = _tile_cache if _tile_cache.size() < 16 else {}
+	var n := _dims.x * _dims.y
+	_solid = PackedByteArray()
+	_solid.resize(n)
+	_support = PackedByteArray()
+	_support.resize(n)
+	for layer: TileMapLayer in layers:
 		if layer.tile_set == null or layer.tile_set.get_physics_layers_count() == 0:
 			continue
 		for c in layer.get_used_cells():
@@ -245,6 +264,10 @@ func _scan_tiles() -> void:
 				var c := cell + Vector2i(dx, dy)
 				if _in_grid(c):
 					_support[_idx(c)] = 1
+	_tile_cache[key] = [_tiles_version, _solid, _support]
+
+static func _on_tiles_changed() -> void:
+	_tiles_version += 1
 
 func _block_cells() -> Dictionary:
 	var out := {}
@@ -254,8 +277,16 @@ func _block_cells() -> Dictionary:
 
 func _plan(target: Vector2i, blocks: Dictionary) -> int:
 	_scan_tiles()
+	if _solid.is_empty():
+		return -1
+	var solid := _solid
+	var support := _support
+	var noise := _noise
+	var w := _dims.x
+	var hgt := _dims.y
+	var cells_n := w * hgt
 	var runs := max_straight + 2
-	var n := _dims.x * _dims.y * 4 * runs
+	var n := cells_n * 4 * runs
 	var g := PackedFloat32Array()
 	g.resize(n)
 	g.fill(INF)
@@ -264,13 +295,24 @@ func _plan(target: Vector2i, blocks: Dictionary) -> int:
 	parent.fill(-1)
 	var closed := PackedByteArray()
 	closed.resize(n)
-	var body := {}
+	var body := PackedByteArray()
+	body.resize(cells_n)
 	for c in _cells:
-		body[c] = true
+		if _in_grid(c):
+			body[_idx(c)] = 1
+	var block_at := PackedByteArray()
+	block_at.resize(cells_n)
+	for c: Vector2i in blocks:
+		if _in_grid(c):
+			block_at[_idx(c)] = 1
 	var eat_cost := eat_time / step_time
+	var dxs: Array[int] = [1, 0, -1, 0]
+	var dys: Array[int] = [0, 1, 0, -1]
+	var tx := target.x - _origin.x
+	var ty := target.y - _origin.y
 
 	var head := _cells[-1]
-	var air_ok := _support[_idx(head)] == 0
+	var air_ok := support[_idx(head)] == 0
 	var head_dir := maxi(_dirs[-1], 0)
 	var head_run := 0
 	if _dirs[-1] >= 0:
@@ -282,10 +324,10 @@ func _plan(target: Vector2i, blocks: Dictionary) -> int:
 	var start := _state(head, head_dir, head_run, runs)
 	g[start] = 0.0
 	var heap := _Heap.new()
-	heap.push(_dist(head, target), start)
 	var best := start
 	var best_h := _dist(head, target)
 	var best_g := 0.0
+	heap.push(best_h, start)
 
 	while not heap.is_empty():
 		var s := heap.pop()
@@ -293,38 +335,47 @@ func _plan(target: Vector2i, blocks: Dictionary) -> int:
 			continue
 		closed[s] = 1
 		var run := s % runs
-		var dir := (s / runs) % 4
-		var cell := _origin + Vector2i((s / runs / 4) % _dims.x, (s / runs / 4) / _dims.x)
-		var h := _dist(cell, target)
-		if h < best_h or (h == best_h and g[s] < best_g):
+		var rest := s / runs
+		var dir := rest % 4
+		var ci := rest / 4
+		var x := ci % w
+		var y := ci / w
+		var h := absi(x - tx) + absi(y - ty)
+		var gs := g[s]
+		if h < best_h or (h == best_h and gs < best_g):
 			best = s
 			best_h = h
-			best_g = g[s]
-		if cell == target:
+			best_g = gs
+		if h == 0:
 			break
+		var back := (dir + 2) % 4
 		for nd in 4:
-			if run > 0 and nd == (dir + 2) % 4:
+			if run > 0 and nd == back:
 				continue
-			var nc := cell + DIRS[nd]
-			if not _in_grid(nc) or _solid[_idx(nc)] == 1:
+			var nx := x + dxs[nd]
+			var ny := y + dys[nd]
+			if nx < 0 or ny < 0 or nx >= w or ny >= hgt:
 				continue
-			var is_block := blocks.has(nc)
-			if not is_block and not air_ok and _support[_idx(nc)] == 0 and nc != target:
+			var ni := ny * w + nx
+			if solid[ni] == 1:
+				continue
+			var is_block := block_at[ni] == 1
+			if not is_block and not air_ok and support[ni] == 0 and (nx != tx or ny != ty):
 				continue
 			var nrun := mini(run + 1, max_straight + 1) if nd == dir and run > 0 else 1
-			var cost := 1.0 + _noise[_idx(nc)] * wander
+			var cost := 1.0 + noise[ni] * wander
 			if nrun > max_straight:
 				cost += straight_penalty
-			if body.has(nc):
+			if body[ni] == 1:
 				cost += self_cross_cost
 			if is_block:
 				cost += eat_cost
-			var ns := _state(nc, nd, nrun, runs)
-			var ng := g[s] + cost
+			var ns := (ni * 4 + nd) * runs + nrun
+			var ng := gs + cost
 			if ng < g[ns]:
 				g[ns] = ng
 				parent[ns] = s
-				heap.push(ng + _dist(nc, target), ns)
+				heap.push(ng + absi(nx - tx) + absi(ny - ty), ns)
 
 	if best == start:
 		return -1

@@ -3,7 +3,6 @@ extends Node
 signal finished
 
 const VOWELS := "aeiou"
-const SOFT_CONSONANTS := "lmnrvwyhj"
 
 @export var lines: Array[String] = []
 @export var autostart: bool = true
@@ -30,7 +29,7 @@ var _syllables := {}
 @onready var label: RichTextLabel = $RichTextLabel
 
 func _ready() -> void:
-	for onset in ["", "m", "k"]:
+	for onset in ["", "m"]:
 		for v in VOWELS:
 			_syllables[onset + v] = load("res://sounds/voice_%s%s.wav" % [onset, v])
 	for i in 4:
@@ -114,7 +113,7 @@ func _speak(c: String, progress: float) -> void:
 		key = c
 	else:
 		var v := VOWELS[(c.unicode_at(0) * 7) % VOWELS.length()]
-		key = ("m" if c in SOFT_CONSONANTS else "k") + v
+		key = "m" + v
 	var p := _voices[_next_voice]
 	_next_voice = (_next_voice + 1) % _voices.size()
 	p.stream = _syllables[key]

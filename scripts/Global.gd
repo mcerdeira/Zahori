@@ -13,9 +13,6 @@ var abilities: Dictionary = {
 	"teleport": false,
 	"zahori": false,
 }
-
-# true entre la muerte del player y la recarga de la room: el player nuevo
-# arranca con unos instantes de invulnerabilidad (player.respawn_grace)
 var respawn_grace_pending: bool = false
 
 # Altares resueltos
@@ -27,11 +24,11 @@ var tablet_pieces: Dictionary = {}
 var pending_tablet_pieces: Dictionary = {}
 var ending: StringName = &""
 
-# true si el player llegó a la room actual atravesando una puerta.
+# true si el player llego a la room actual atravesando una puerta
 var came_from_door: bool = false
-# Escena (res://...) de la que venía el player al cruzar la última puerta.
+# Escena (res://...) de la que venía el player al cruzar la última puerta
 var previous_scene: String = ""
-# Por cada escena, la puerta por la que se salió la última vez: { "res://...tscn": NodePath }
+# Por cada escena, la puerta por la que se salió la última vez
 var last_door: Dictionary = {}
 
 # Se emite cada vez que una habilidad se prende o se apaga.
@@ -40,13 +37,13 @@ signal ability_changed(id: StringName, enabled: bool)
 const WATER_EVAPORATION := preload("res://scenes/water_evaporation.gd")
 var water_active: bool = true
 
-# Meta que guarda, en cada TileMapLayer, las celdas de agua ocultas por hydro.
+# Las celdas de agua ocultas por hydro
 const HIDDEN_WATER_META := &"hidden_water_cells"
 
 const SAVE_PATH := "user://game.save"
 const SAVE_VERSION := 1
 
-# Al cargar: el player aparece acá (coords de la room) en vez de en la posición inicial.
+# Al cargar: el player aparece en (coords de la room) en vez de en la posición inicial
 var has_load_spawn := false
 var load_spawn := Vector2.ZERO
 

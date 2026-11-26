@@ -11,7 +11,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _menu or not event.is_action_pressed("pause") or get_tree().paused:
+	if _menu or get_tree().paused:
+		return
+	if not event.is_action_pressed("pause") and not event.is_action_pressed("ui_cancel"):
 		return
 	var scene := get_tree().current_scene
 	if scene == null or not scene.scene_file_path.begins_with(ROOMS_DIR):
