@@ -46,7 +46,7 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if _closing:
 		return
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_cancel") or (_is_enter(event) and screen.can_close_with_enter()):
 		close()
 	elif screen.is_busy():
 		if event.is_action_pressed("action") or event.is_action_pressed("ui_accept"):
@@ -54,6 +54,10 @@ func _input(event: InputEvent) -> void:
 	else:
 		viewport.push_input(event)
 	get_viewport().set_input_as_handled()
+
+func _is_enter(event: InputEvent) -> bool:
+	return event is InputEventKey and event.pressed and not event.echo \
+			and event.keycode in [KEY_ENTER, KEY_KP_ENTER]
 
 func close() -> void:
 	_closing = true

@@ -24,6 +24,7 @@ var _queue: Array = []
 var _type_timer := 0.0
 var _awaiting := false
 var _toggling := false
+var _booted := false
 
 @onready var glyphs: HBoxContainer = $vbox/glyphs
 @onready var glyphs_gap: Control = $vbox/glyphs_gap
@@ -47,6 +48,9 @@ func _ready() -> void:
 func is_busy() -> bool:
 	return not _queue.is_empty()
 
+func can_close_with_enter() -> bool:
+	return _booted and not _awaiting and not is_busy()
+
 func skip() -> void:
 	while not _queue.is_empty():
 		var item = _queue.pop_front()
@@ -58,6 +62,7 @@ func skip() -> void:
 	_type_timer = 0.0
 
 func boot() -> void:
+	_booted = true
 	_type_log("ALTAR OS V1.14\n(C) 1989 TEMPLE SYS.\n" + "-".repeat(20) + "\n")
 	_wait(0.3)
 	var last_check := "ARCHIVE" if is_hint else "GLYPHS"

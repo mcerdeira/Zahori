@@ -2,7 +2,8 @@ extends Node
 
 signal changed
 
-const PATH := "user://settings.cfg"
+const PATH := "user://game.settings"
+const LEGACY_PATH := "user://settings.cfg"
 
 const BUSES: Array[StringName] = [&"Master", &"Music", &"SFX"]
 
@@ -142,7 +143,8 @@ func save() -> void:
 
 func _load() -> void:
 	var cfg := ConfigFile.new()
-	if cfg.load(PATH) != OK:
+	var migrating := not FileAccess.file_exists(PATH) and FileAccess.file_exists(LEGACY_PATH)
+	if cfg.load(LEGACY_PATH if migrating else PATH) != OK:
 		return
 	for bus in BUSES:
 		volumes[bus] = clampf(float(cfg.get_value("audio", bus, 1.0)), 0.0, 1.0)
@@ -151,3 +153,6 @@ func _load() -> void:
 		var saved = cfg.get_value("keys", a, null)
 		if saved is Array and saved.size() == 2:
 			keys[a] = [int(saved[0]), int(saved[1])]
+	if migrating:
+		save()
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(LEGACY_PATH))

@@ -41,7 +41,7 @@ var water_active: bool = true
 const HIDDEN_WATER_META := &"hidden_water_cells"
 
 const SAVE_PATH := "user://game.save"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 # Al cargar: el player aparece en (coords de la room) en vez de en la posición inicial
 var has_load_spawn := false
@@ -52,6 +52,7 @@ var altar_respawn_scene := ""
 var altar_respawn_pos := Vector2.ZERO
 
 var _default_abilities: Dictionary
+var _save_on_arrival := false
 
 func _ready() -> void:
 	_default_abilities = abilities.duplicate()
@@ -94,9 +95,22 @@ func solve_altar(number: int, ability_id: StringName) -> void:
 
 func save_game(room: String, position: Vector2) -> void:
 	var cfg := ConfigFile.new()
+	cfg.set_value("game", "spawn", "altar")
+	cfg.set_value("game", "position", position)
+	_write_save(cfg, room)
+
+func on_door_arrival(can_save: bool) -> void:
+	if _save_on_arrival and can_save:
+		var cfg := ConfigFile.new()
+		cfg.set_value("game", "spawn", "door")
+		cfg.set_value("game", "previous_scene", previous_scene)
+		_write_save(cfg, get_tree().current_scene.scene_file_path)
+	_save_on_arrival = false
+
+func _write_save(cfg: ConfigFile, room: String) -> void:
 	cfg.set_value("game", "version", SAVE_VERSION)
 	cfg.set_value("game", "room", room)
-	cfg.set_value("game", "position", position)
+	cfg.set_value("game", "last_door", last_door)
 	for id in abilities:
 		cfg.set_value("abilities", String(id), abilities[id])
 	cfg.set_value("progress", "solved_altars", solved_altars.keys())
@@ -136,6 +150,13 @@ func load_game() -> String:
 		solved_altars[int(n)] = true
 	for i in cfg.get_value("progress", "tablet_pieces", []):
 		tablet_pieces[int(i)] = true
+	var saved_doors = cfg.get_value("game", "last_door", {})
+	if saved_doors is Dictionary:
+		last_door = saved_doors
+	if cfg.get_value("game", "spawn", "altar") == "door":
+		came_from_door = true
+		previous_scene = cfg.get_value("game", "previous_scene", "")
+		return room
 	load_spawn = cfg.get_value("game", "position", Vector2.ZERO)
 	has_load_spawn = true
 	# Si muere antes de salir de la room reaparece en el altar donde guardo
@@ -155,6 +176,7 @@ func reset_game() -> void:
 	last_door.clear()
 	has_load_spawn = false
 	altar_respawn_scene = ""
+	_save_on_arrival = false
 
 func update_water_tiles() -> void:
 	var scene := get_tree().current_scene
@@ -203,6 +225,7 @@ func _restore_water_cells(layer: TileMapLayer) -> void:
 func register_door_exit(door: Node) -> void:
 	var scene := door.get_tree().current_scene
 	came_from_door = true
+	_save_on_arrival = true
 	previous_scene = scene.scene_file_path
 	last_door[previous_scene] = scene.get_path_to(door)
 

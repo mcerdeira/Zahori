@@ -72,6 +72,7 @@ func _ready() -> void:
 		if not resists_water() and _in_water():
 			_drowned_door = door
 			die.call_deferred(door)
+	Global.on_door_arrival(door != null and _drowned_door == null)
 	if Global.respawn_grace_pending:
 		Global.respawn_grace_pending = false
 		_grace = respawn_grace
