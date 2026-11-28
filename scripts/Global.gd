@@ -6,7 +6,7 @@ const DEBUG_START_SCENE := "res://scenes/rooms/level0.tscn"
 var max_blocks: int = 4
 
 var abilities: Dictionary = {
-	"blocks": false,
+	"blocks": true,
 	"hydro": false,
 	"eat": false,
 	"reach": false,

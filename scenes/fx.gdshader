@@ -5,6 +5,8 @@ uniform sampler2D offset_texture : hint_default_white;
 uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
 
 uniform bool crt = true;
+global uniform bool fx_crt;
+global uniform bool fx_aberration;
 uniform float curvature : hint_range(0.0, 0.3) = 0.035;
 uniform float corner_radius : hint_range(0.0, 40.0) = 10.0;
 uniform float scanlines : hint_range(0.0, 1.0) = 0.14;
@@ -19,16 +21,17 @@ vec2 warp(vec2 uv) {
 }
 
 void fragment() {
-	vec2 uv = crt ? warp(SCREEN_UV) : SCREEN_UV;
+	bool use_crt = crt && fx_crt;
+	vec2 uv = use_crt ? warp(SCREEN_UV) : SCREEN_UV;
 	vec2 px = SCREEN_PIXEL_SIZE;
 
-	float off = amount * texture(offset_texture, uv).r / 100.0;
+	float off = fx_aberration ? amount * texture(offset_texture, uv).r / 100.0 : 0.0;
 	vec3 col;
 	col.r = texture(SCREEN_TEXTURE, vec2(uv.x + off, uv.y)).r;
 	col.g = texture(SCREEN_TEXTURE, uv).g;
 	col.b = texture(SCREEN_TEXTURE, vec2(uv.x - off, uv.y)).b;
 
-	if (crt) {
+	if (use_crt) {
 		vec3 bloom = vec3(0.0);
 		bloom += texture(SCREEN_TEXTURE, uv + vec2(1.5, 0.0) * px).rgb;
 		bloom += texture(SCREEN_TEXTURE, uv - vec2(1.5, 0.0) * px).rgb;

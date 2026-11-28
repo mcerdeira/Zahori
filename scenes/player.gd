@@ -238,7 +238,11 @@ func show_item(frames: Array[Texture2D], start_dark: float = 0.0) -> void:
 	z_index = old_z
 	z_as_relative = old_relative
 	if state == State.ITEM:
-		state = State.NORMAL
+		if blocks.is_empty() and _vanishing.is_empty():
+			state = State.NORMAL
+		else:
+			state = State.VANISHING
+			_timer = 0.0
 
 func _fire_shot() -> void:
 	var dir := -1.0 if sprite.flip_h else 1.0

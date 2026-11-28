@@ -90,6 +90,17 @@ pause={
 
 3d/physics_engine="Jolt Physics"
 
+[shader_globals]
+
+fx_crt={
+"type": "bool",
+"value": true
+}
+fx_aberration={
+"type": "bool",
+"value": true
+}
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

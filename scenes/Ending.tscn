@@ -12,7 +12,9 @@ shader_parameter/amount = 0.2
 script = ExtResource("2_ending")
 
 [node name="ColorRect" type="ColorRect" parent="."]
+visible = false
 top_level = true
+z_index = 4096
 material = SubResource("ShaderMaterial_fx")
 offset_left = -14.0
 offset_top = -18.0

@@ -27,6 +27,17 @@
 [ext_resource type="Shader" uid="uid://y53i2lhrg154" path="res://scenes/fx.gdshader" id="25_kyuta"]
 [ext_resource type="PackedScene" path="res://scenes/tablet_piece.tscn" id="26_dbauc"]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jyhfs"]
+shader = ExtResource("25_kyuta")
+shader_parameter/amount = 0.2
+shader_parameter/crt = true
+shader_parameter/curvature = 0.035
+shader_parameter/corner_radius = 10.0
+shader_parameter/scanlines = 0.14
+shader_parameter/glow = 0.3
+shader_parameter/vignette = 0.35
+shader_parameter/brightness = 1.08
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_l150k"]
 texture = ExtResource("2_dbqm8")
 0:0/0 = 0
@@ -161,12 +172,18 @@ sources/31 = SubResource("TileSetAtlasSource_yup7b")
 sources/32 = SubResource("TileSetAtlasSource_r371c")
 sources/33 = SubResource("TileSetAtlasSource_2rffo")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jyhfs"]
-shader = ExtResource("25_kyuta")
-shader_parameter/amount = 0.2
-
 [node name="Main" type="Node2D" unique_id=1210615546]
 script = ExtResource("1_dbauc")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=57927670]
+visible = false
+top_level = true
+z_index = 4096
+material = SubResource("ShaderMaterial_jyhfs")
+offset_left = -14.0
+offset_top = -7.0
+offset_right = 589.0
+offset_bottom = 341.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=880454566]
 anchor_mode = 0
@@ -181,16 +198,8 @@ position = Vector2(89, 120)
 tile_map_data = PackedByteArray("AAAEAAgAAwAAAAAAAAAFAAgAAwAAAAAAAAAGAAgAAwAAAAAAAAAHAAgAAwAAAAAAAAAIAAgAAwAAAAAAAAAJAAgAAwAAAAAAAAAKAAgAAwAAAAAAAAALAAgAAwAAAAAAAAAMAAgAAwAAAAAAAAANAAgAAwAAAAAAAAAOAAgAAwAAAAAAAAAPAAgAAwAAAAAAAAA=")
 tile_set = SubResource("TileSet_jej6c")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=57927670]
-top_level = true
-material = SubResource("ShaderMaterial_jyhfs")
-offset_left = -14.0
-offset_top = -7.0
-offset_right = 589.0
-offset_bottom = 341.0
-
 [node name="TabletPiece" parent="." unique_id=573919352 instance=ExtResource("26_dbauc")]
-position = Vector2(139, 115)
+position = Vector2(138, 82)
 
 [node name="TabletPiece2" parent="." unique_id=2086899741 instance=ExtResource("26_dbauc")]
 position = Vector2(194, 114)

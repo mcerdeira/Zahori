@@ -27,12 +27,15 @@ const DEFAULT_KEYS := {
 	&"pause": [KEY_Q, KEY_P],
 }
 const RESERVED_KEYS: Array[int] = [KEY_ESCAPE]
+const FX_SHADER := preload("res://scenes/fx.gdshader")
 
 @export var windowed_scale: int = 2
 
 var volumes := {}
 var master_duck := 1.0
 var fullscreen := true
+var crt := true
+var aberration := true
 var keys := {}
 
 var _base_db := {}
@@ -45,6 +48,18 @@ func _ready() -> void:
 	_reset_keys()
 	_load()
 	apply_all()
+	get_tree().node_added.connect(_on_node_added)
+	_show_fx_in.call_deferred(get_tree().root)
+
+func _show_fx_in(node: Node) -> void:
+	_on_node_added(node)
+	for child in node.get_children():
+		_show_fx_in(child)
+
+func _on_node_added(node: Node) -> void:
+	if node is ColorRect and node.material is ShaderMaterial \
+			and (node.material as ShaderMaterial).shader == FX_SHADER:
+		node.visible = true
 
 func _reset_keys() -> void:
 	keys.clear()
@@ -55,6 +70,7 @@ func apply_all() -> void:
 	for bus in BUSES:
 		_apply_volume(bus)
 	_apply_window()
+	_apply_fx()
 	for a in ACTIONS:
 		_apply_action(a)
 
@@ -90,6 +106,20 @@ func _apply_window() -> void:
 	var usable := DisplayServer.screen_get_usable_rect(screen)
 	DisplayServer.window_set_size(size)
 	DisplayServer.window_set_position(usable.position + (usable.size - size) / 2)
+
+func set_crt(value: bool) -> void:
+	crt = value
+	_apply_fx()
+	save()
+
+func set_aberration(value: bool) -> void:
+	aberration = value
+	_apply_fx()
+	save()
+
+func _apply_fx() -> void:
+	RenderingServer.global_shader_parameter_set(&"fx_crt", crt)
+	RenderingServer.global_shader_parameter_set(&"fx_aberration", aberration)
 
 func bind_key(action: StringName, slot: int, keycode: int) -> void:
 	var previous: int = keys[action][slot]
@@ -137,6 +167,8 @@ func save() -> void:
 	for bus in BUSES:
 		cfg.set_value("audio", bus, volumes[bus])
 	cfg.set_value("display", "fullscreen", fullscreen)
+	cfg.set_value("display", "crt", crt)
+	cfg.set_value("display", "aberration", aberration)
 	for a in ACTIONS:
 		cfg.set_value("keys", a, keys[a])
 	cfg.save(PATH)
@@ -149,6 +181,8 @@ func _load() -> void:
 	for bus in BUSES:
 		volumes[bus] = clampf(float(cfg.get_value("audio", bus, 1.0)), 0.0, 1.0)
 	fullscreen = bool(cfg.get_value("display", "fullscreen", true))
+	crt = bool(cfg.get_value("display", "crt", true))
+	aberration = bool(cfg.get_value("display", "aberration", true))
 	for a in ACTIONS:
 		var saved = cfg.get_value("keys", a, null)
 		if saved is Array and saved.size() == 2:

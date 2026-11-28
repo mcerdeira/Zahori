@@ -12,7 +12,9 @@ shader_parameter/amount = 0.2
 script = ExtResource("1_aqbct")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=220832772]
+visible = false
 top_level = true
+z_index = 4096
 material = SubResource("ShaderMaterial_hc7eg")
 offset_left = -14.0
 offset_top = -18.0

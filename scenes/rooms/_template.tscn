@@ -181,7 +181,9 @@ position = Vector2(89, 120)
 tile_set = SubResource("TileSet_jej6c")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=57927670]
+visible = false
 top_level = true
+z_index = 4096
 material = SubResource("ShaderMaterial_jyhfs")
 offset_left = -14.0
 offset_top = -7.0

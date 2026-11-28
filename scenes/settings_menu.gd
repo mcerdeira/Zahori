@@ -5,7 +5,7 @@ signal closed
 enum Page { MAIN, CONTROLS }
 
 const FONT := preload("res://fonts/prstartk.ttf")
-const MAIN_ROWS: Array[String] = ["MASTER", "MUSIC", "SFX", "DISPLAY", "CONTROLS", "BACK"]
+const MAIN_ROWS: Array[String] = ["MASTER", "MUSIC", "SFX", "DISPLAY", "CRT", "ABERRATION", "CONTROLS", "BACK"]
 const BUS_OF := {"MASTER": &"Master", "MUSIC": &"Music", "SFX": &"SFX"}
 
 const INK := Color(0.92, 0.92, 0.95)
@@ -95,15 +95,24 @@ func _side(dir: int) -> void:
 			var v: float = Settings.volumes[bus]
 			Settings.set_volume(bus, snappedf(v + dir * volume_step, volume_step))
 			Sfx.play("term_key")
+		"DISPLAY", "CRT", "ABERRATION":
+			_toggle(MAIN_ROWS[_row])
+			Sfx.play("term_key")
+
+func _toggle(row_name: String) -> void:
+	match row_name:
 		"DISPLAY":
 			Settings.set_fullscreen(not Settings.fullscreen)
-			Sfx.play("term_key")
+		"CRT":
+			Settings.set_crt(not Settings.crt)
+		"ABERRATION":
+			Settings.set_aberration(not Settings.aberration)
 
 func _confirm() -> void:
 	if _page == Page.MAIN:
 		match MAIN_ROWS[_row]:
-			"DISPLAY":
-				Settings.set_fullscreen(not Settings.fullscreen)
+			"DISPLAY", "CRT", "ABERRATION":
+				_toggle(MAIN_ROWS[_row])
 				Sfx.play("term_ok")
 			"CONTROLS":
 				_page = Page.CONTROLS
@@ -160,7 +169,7 @@ func _text(pos: Vector2, s: String, color: Color, size := 8,
 
 func _draw_menu() -> void:
 	var view := canvas.size
-	var panel := Rect2(Vector2.ZERO, Vector2(352, 248))
+	var panel := Rect2(Vector2.ZERO, Vector2(352, 288))
 	panel.position = ((view - panel.size) / 2.0).round()
 	canvas.draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.55))
 	canvas.draw_rect(panel, PANEL_BG)
@@ -188,22 +197,34 @@ func _draw_main(panel: Rect2) -> void:
 			y += 8
 		if i == 0:
 			_text(Vector2(x - 20, y - 14), "AUDIO", Color(DIM, 0.7))
+		if row_name == "DISPLAY":
+			_text(Vector2(x - 20, y - 14), "VIDEO", Color(DIM, 0.7))
 		if sel:
 			_text(Vector2(x - 14, y), ">", ACCENT)
 		_text(Vector2(x, y), row_name, color)
 		match row_name:
 			"MASTER", "MUSIC", "SFX":
 				_draw_slider(Vector2(x + 96, y - 7), Settings.volumes[BUS_OF[row_name]], sel)
-			"DISPLAY":
-				var mode := "FULLSCREEN" if Settings.fullscreen else "WINDOWED"
+			"DISPLAY", "CRT", "ABERRATION":
+				var mode := _toggle_text(row_name)
 				var vx := x + 96
 				_text(Vector2(vx, y), "<", ACCENT if sel else Color(DIM, 0.6))
 				_text(Vector2(vx + 12, y), mode, color, 8, HORIZONTAL_ALIGNMENT_CENTER, 112)
 				_text(Vector2(vx + 132, y), ">", ACCENT if sel else Color(DIM, 0.6))
 		y += 20
-	var hint := "LEFT/RIGHT: ADJUST   ESC: BACK" if _row <= 3 else "ENTER: SELECT   ESC: BACK"
+	var adjustable := _row < MAIN_ROWS.find("CONTROLS")
+	var hint := "LEFT/RIGHT: ADJUST   ESC: BACK" if adjustable else "ENTER: SELECT   ESC: BACK"
 	_text(Vector2(panel.position.x, panel.end.y - 12), hint, Color(DIM, 0.8), 8,
 			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x)
+
+func _toggle_text(row_name: String) -> String:
+	match row_name:
+		"DISPLAY":
+			return "FULLSCREEN" if Settings.fullscreen else "WINDOWED"
+		"CRT":
+			return "ON" if Settings.crt else "OFF"
+		_:
+			return "ON" if Settings.aberration else "OFF"
 
 func _draw_slider(pos: Vector2, value: float, sel: bool) -> void:
 	const SEGMENTS := 10
